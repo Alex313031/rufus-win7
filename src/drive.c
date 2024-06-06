@@ -1383,8 +1383,7 @@ uint64_t GetDriveSize(DWORD DriveIndex)
 	if (hPhysical == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-		NULL, 0, geometry, sizeof(geometry), &size, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, geometry, sizeof(geometry), &size, NULL);
 	safe_closehandle(hPhysical);
 	if (!r || size <= 0)
 		return 0;
@@ -2056,7 +2055,6 @@ out:
 BOOL UnmountVolume(HANDLE hDrive)
 {
 	DWORD size;
-
 	if (!DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &size, NULL)) {
 		uprintf("Could not unmount drive: %s", WindowsErrorString());
 		return FALSE;
