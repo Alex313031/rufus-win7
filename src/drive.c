@@ -2543,6 +2543,8 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
 
 	size = sizeof(DriveLayoutEx) - ((partition_style == PARTITION_STYLE_GPT) ?
 		((4 - pi) * sizeof(PARTITION_INFORMATION_EX)) : 0);
+	// The DRIVE_LAYOUT_INFORMATION_EX used by Microsoft, with its 1-sized array, is designed to overrun...
+	// coverity[overrun-buffer-arg]
 	if (!DeviceIoControl(hDrive, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)&DriveLayoutEx, size, NULL, 0, &size, NULL)) {
 		uprintf("Could not set drive layout: %s", WindowsErrorString());
 		return FALSE;
