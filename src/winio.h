@@ -170,17 +170,10 @@ static __inline BOOL GetSizeAsync(HANDLE h, LPDWORD lpNumberOfBytes)
 		return FALSE;
 	}
 	fd->Overlapped.bOffsetUpdated = TRUE;
-	if (WindowsVersion.Version >= WINDOWS_8) {
-		if (!GetOverlappedResultEx(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
-			lpNumberOfBytes, WRITE_TIMEOUT, (fd->iStatus < 0)))
-			// When reading from VHD/VHDX we get SECTOR_NOT_FOUND rather than EOF for the end of the drive
-			return (GetLastError() == ERROR_HANDLE_EOF || GetLastError() == ERROR_SECTOR_NOT_FOUND);
-	} else {
-		// No timeout call for Windows 7
-		if (!GetOverlappedResult(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
-			lpNumberOfBytes, (fd->iStatus < 0)))
-			return (GetLastError() == ERROR_HANDLE_EOF);
-	}
+	// No timeout call for Windows 7
+	if (!GetOverlappedResult(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
+		lpNumberOfBytes, (fd->iStatus < 0)))
+		return (GetLastError() == ERROR_HANDLE_EOF);
 	fd->Overlapped.Offset += *lpNumberOfBytes;
 	return TRUE;
 }
