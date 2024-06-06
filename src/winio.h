@@ -125,7 +125,7 @@ static __inline BOOL WriteFileAsync(HANDLE h, LPVOID lpBuffer, DWORD nNumberOfBy
 	ASYNC_FD* fd = (ASYNC_FD*)h;
 	fd->Overlapped.bOffsetUpdated = FALSE;
 	if (!WriteFile(fd->hFile, lpBuffer, nNumberOfBytesToWrite, NULL,
-		(OVERLAPPED*)&fd->Overlapped))
+		(OVERLAPPED*)&fd->Overlapped)) {
 		// TODO: Is it possible to get ERROR_HANDLE_EOF here?
 		fd->iStatus = (GetLastError() == ERROR_IO_PENDING) ? -1 : 0;
 	} else {
