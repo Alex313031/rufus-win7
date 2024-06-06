@@ -90,12 +90,13 @@ uint64_t persistence_size = 0;
 BOOL SetAutoMount(BOOL enable)
 {
 	HANDLE hMountMgr;
+	DWORD size;
 	BOOL ret = FALSE;
 
 	hMountMgr = CreateFileA(MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hMountMgr == INVALID_HANDLE_VALUE)
 		return FALSE;
-	ret = DeviceIoControl(hMountMgr, IOCTL_MOUNTMGR_SET_AUTO_MOUNT, &enable, sizeof(enable), NULL, 0, NULL, NULL);
+	ret = DeviceIoControl(hMountMgr, IOCTL_MOUNTMGR_SET_AUTO_MOUNT, &enable, sizeof(enable), NULL, 0, &size, NULL);
 	CloseHandle(hMountMgr);
 	return ret;
 }
@@ -136,6 +137,7 @@ static HANDLE GetHandle(char* Path, BOOL bLockDrive, BOOL bWriteAccess, BOOL bWr
 {
 	int i;
 	BYTE access_mask = 0;
+	DWORD size;
 	uint64_t EndTime;
 	HANDLE hDrive = INVALID_HANDLE_VALUE;
 	char DevPath[MAX_PATH];
@@ -184,13 +186,13 @@ static HANDLE GetHandle(char* Path, BOOL bLockDrive, BOOL bWriteAccess, BOOL bWr
 	}
 
 	if (bLockDrive) {
-		if (DeviceIoControl(hDrive, FSCTL_ALLOW_EXTENDED_DASD_IO, NULL, 0, NULL, 0, NULL, NULL)) {
+		if (DeviceIoControl(hDrive, FSCTL_ALLOW_EXTENDED_DASD_IO, NULL, 0, NULL, 0, &size, NULL)) {
 			uprintf("I/O boundary checks disabled");
 		}
 
 		EndTime = GetTickCount64() + DRIVE_ACCESS_TIMEOUT;
 		do {
-			if (DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, NULL, NULL))
+			if (DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &size, NULL))
 				goto out;
 			if (IS_ERROR(ErrorStatus))	// User cancel
 				break;
@@ -309,7 +311,8 @@ char* GetLogicalName(DWORD DriveIndex, uint64_t PartitionOffset, BOOL bKeepTrail
 			continue;
 		}
 
-		r = DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, &DiskExtents, sizeof(DiskExtents), &size, NULL);
+		r = DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0,
+			&DiskExtents, sizeof(DiskExtents), &size, NULL);
 		if ((!r) || (size == 0)) {
 			suprintf("Could not get Disk Extents: %s", r ? "(empty data)" : WindowsErrorString());
 			safe_closehandle(hDrive);
@@ -1060,10 +1063,11 @@ int GetDriveNumber(HANDLE hDrive, char* path)
 	BOOL s;
 	int r = -1;
 
-	if (!DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, &DiskExtents, sizeof(DiskExtents), &size, NULL) ||
-		(size <= 0) || (DiskExtents.NumberOfDiskExtents < 1)) {
+	if (!DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0,
+		&DiskExtents, sizeof(DiskExtents), &size, NULL) || (size <= 0) || (DiskExtents.NumberOfDiskExtents < 1)) {
 		// DiskExtents are NO_GO (which is the case for external USB HDDs...)
-		s = DeviceIoControl(hDrive, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0, &DeviceNumber, sizeof(DeviceNumber), &size, NULL);
+		s = DeviceIoControl(hDrive, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0, &DeviceNumber, sizeof(DeviceNumber),
+			&size, NULL);
 		if ((!s) || (size == 0)) {
 			uuprintf("Could not get device number for device %s %s", path, s ? "(empty data)" : WindowsErrorString());
 			return -1;
@@ -1177,7 +1181,8 @@ static BOOL _GetDriveLettersAndType(DWORD DriveIndex, char* drive_letters, UINT*
 	// handling to determine if they are fixed or removable.
 	if ((drives_found == 0) && (drive_type != NULL)) {
 		hPhysical = GetPhysicalHandle(DriveIndex + DRIVE_INDEX_MIN, FALSE, FALSE, FALSE);
-		r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, geometry, sizeof(geometry), &size, NULL);
+		r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+			NULL, 0, geometry, sizeof(geometry), &size, NULL);
 		safe_closehandle(hPhysical);
 		if (r && size > 0) {
 			if (DiskGeometry->Geometry.MediaType == FixedMedia)
@@ -1309,7 +1314,7 @@ BOOL IsDriveLetterInUse(const char drive_letter)
 BOOL GetDriveLabel(DWORD DriveIndex, char* letters, char** label, BOOL bSilent)
 {
 	HANDLE hPhysical;
-	DWORD error;
+	DWORD size, error;
 	static char VolumeLabel[MAX_PATH + 1] = { 0 };
 	char DrivePath[] = "#:\\", AutorunPath[] = "#:\\autorun.inf", *AutorunLabel = NULL;
 	WCHAR VolumeName[MAX_PATH + 1] = { 0 }, FileSystemName[64];
@@ -1339,7 +1344,7 @@ BOOL GetDriveLabel(DWORD DriveIndex, char* letters, char** label, BOOL bSilent)
 	// In the case of card readers with no card, users can get an annoying popup asking them
 	// to insert media. Use IOCTL_STORAGE_CHECK_VERIFY to prevent this
 	hPhysical = GetPhysicalHandle(DriveIndex, FALSE, FALSE, TRUE);
-	if (DeviceIoControl(hPhysical, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, NULL, 0, NULL, NULL))
+	if (DeviceIoControl(hPhysical, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, NULL, 0, &size, NULL))
 		AutorunLabel = get_token_data_file("label", AutorunPath);
 	else if (GetLastError() == ERROR_NOT_READY)
 		suprintf("Ignoring 'autorun.inf' label for drive %c: No media", toupper(letters[0]));
@@ -1381,7 +1386,8 @@ uint64_t GetDriveSize(DWORD DriveIndex)
 	if (hPhysical == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, geometry, sizeof(geometry), &size, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+		NULL, 0, geometry, sizeof(geometry), &size, NULL);
 	safe_closehandle(hPhysical);
 	if (!r || size <= 0)
 		return 0;
@@ -1399,7 +1405,8 @@ BOOL IsMediaPresent(DWORD DriveIndex)
 	BYTE geometry[128];
 
 	hPhysical = GetPhysicalHandle(DriveIndex, FALSE, FALSE, TRUE);
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, geometry, sizeof(geometry), &size, NULL) && (size > 0);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+			NULL, 0, geometry, sizeof(geometry), &size, NULL) && (size > 0);
 	safe_closehandle(hPhysical);
 	return r;
 }
@@ -1502,7 +1509,8 @@ uint64_t GetEspOffset(DWORD DriveIndex)
 	if (hPhysical == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, layout, sizeof(layout), &size, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
+		NULL, 0, layout, sizeof(layout), &size, NULL);
 	if (!r || size <= 0) {
 		uprintf("Could not get layout for drive 0x%02x: %s", DriveIndex, WindowsErrorString());
 		goto out;
@@ -1686,7 +1694,7 @@ BOOL ToggleEsp(DWORD DriveIndex, uint64_t PartitionOffset)
 	}
 
 	DriveLayout->PartitionEntry[esp_index].RewritePartition = TRUE;	// Just in case
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)DriveLayout, dl_size, NULL, 0, NULL, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)DriveLayout, dl_size, NULL, 0, &dl_size, NULL);
 	if (!r) {
 		uprintf("Could not set drive layout: %s", WindowsErrorString());
 		goto out;
@@ -2052,7 +2060,9 @@ out:
  */
 BOOL UnmountVolume(HANDLE hDrive)
 {
-	if (!DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, NULL, NULL)) {
+	DWORD size;
+
+	if (!DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &size, NULL)) {
 		uprintf("Could not unmount drive: %s", WindowsErrorString());
 		return FALSE;
 	}
@@ -2530,7 +2540,7 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
 
 	// If you don't call IOCTL_DISK_CREATE_DISK, the IOCTL_DISK_SET_DRIVE_LAYOUT_EX call will fail
 	size = sizeof(CreateDisk);
-	if (!DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, size, NULL, 0, NULL, NULL)) {
+	if (!DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, size, NULL, 0, &size, NULL)) {
 		uprintf("Could not reset disk: %s", WindowsErrorString());
 		return FALSE;
 	}
@@ -2539,10 +2549,8 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
 	RefreshDriveLayout(hDrive);
 
 	size = sizeof(DriveLayoutEx) - ((partition_style == PARTITION_STYLE_GPT) ?
-		((MAX_PARTITIONS - pi) * sizeof(PARTITION_INFORMATION_EX)) : 0);
-	// The DRIVE_LAYOUT_INFORMATION_EX used by Microsoft, with its 1-sized array, is designed to overrun...
-	// coverity[overrun-buffer-arg]
-	if (!DeviceIoControl(hDrive, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)&DriveLayoutEx, size, NULL, 0, NULL, NULL)) {
+		((4 - pi) * sizeof(PARTITION_INFORMATION_EX)) : 0);
+	if (!DeviceIoControl(hDrive, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)&DriveLayoutEx, size, NULL, 0, &size, NULL)) {
 		uprintf("Could not set drive layout: %s", WindowsErrorString());
 		return FALSE;
 	}
@@ -2556,9 +2564,10 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
 BOOL RefreshDriveLayout(HANDLE hDrive)
 {
 	BOOL r;
+	DWORD size;
 
 	// Diskpart does call the following IOCTL this after updating the partition table, so we do too
-	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, NULL, NULL);
+	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, &size, NULL);
 	if (!r)
 		uprintf("Could not refresh drive layout: %s", WindowsErrorString());
 	return r;
@@ -2568,17 +2577,20 @@ BOOL RefreshDriveLayout(HANDLE hDrive)
 BOOL InitializeDisk(HANDLE hDrive)
 {
 	BOOL r;
+	DWORD size;
 	CREATE_DISK CreateDisk = {PARTITION_STYLE_RAW, {{0}}};
 
 	uprintf("Initializing disk...");
 
-	r = DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, sizeof(CreateDisk), NULL, 0, NULL, NULL);
+	size = sizeof(CreateDisk);
+	r = DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK,
+			(BYTE*)&CreateDisk, size, NULL, 0, &size, NULL);;
 	if (!r) {
 		uprintf("Could not delete drive layout: %s", WindowsErrorString());
 		return FALSE;
 	}
 
-	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, NULL, NULL);
+	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, &size, NULL);
 	if (!r) {
 		uprintf("Could not refresh drive layout: %s", WindowsErrorString());
 		return FALSE;
@@ -2621,7 +2633,8 @@ BOOL IsMsDevDrive(DWORD DriveIndex)
 	if (hPhysical == INVALID_HANDLE_VALUE)
 		goto out;
 
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, layout, sizeof(layout), &size, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
+		NULL, 0, layout, sizeof(layout), &size, NULL);
 	if (!r || size <= 0)
 		goto out;
 

@@ -1438,46 +1438,24 @@ void SetFidoCheck(void)
  */
 BOOL SetUpdateCheck(void)
 {
-	BOOL enable_updates;
 	uint64_t commcheck = GetTickCount64();
 	char filename[MAX_PATH] = "", exename[] = APPLICATION_NAME ".exe";
-	size_t fn_len, exe_len;
 
 	// Test if we can read and write settings. If not, forget it.
 	WriteSetting64(SETTING_COMM_CHECK, commcheck);
 	if (ReadSetting64(SETTING_COMM_CHECK) != commcheck)
 		return FALSE;
 
-	// If the update interval is not set, this is the first time we run so prompt the user
-	if (ReadSetting32(SETTING_UPDATE_INTERVAL) == 0) {
-		notification_info more_info;
-
-		// Add a hack for people who'd prefer the app not to prompt about update settings on first run.
-		// If the executable is called "rufus.exe", without version, we disable the prompt
-		GetModuleFileNameU(NULL, filename, sizeof(filename));
-		fn_len = safe_strlen(filename);
-		exe_len = safe_strlen(exename);
-#if !defined(_DEBUG)	// Don't allow disabling update prompt, unless it's a release
-		if ((fn_len > exe_len) && (safe_stricmp(&filename[fn_len-exe_len], exename) == 0)) {
-			uprintf("Short name used - Disabling initial update policy prompt\n");
-			enable_updates = TRUE;
-		} else {
-#endif
-			more_info.id = IDD_UPDATE_POLICY;
-			more_info.callback = UpdateCallback;
-			enable_updates = Notification(MSG_QUESTION, NULL, &more_info, lmprintf(MSG_004), lmprintf(MSG_005));
-#if !defined(_DEBUG)
-		}
-#endif
-		if (!enable_updates) {
-			WriteSetting32(SETTING_UPDATE_INTERVAL, -1);
-			return FALSE;
-		}
+		WriteSetting32(SETTING_UPDATE_INTERVAL, -1);
+		WriteSetting32(SETTING_VERBOSE_UPDATES, 2);
+		WriteSetting32(SETTING_ADVANCED_MODE, 1);
+		WriteSetting32(SETTING_ADVANCED_MODE_FORMAT, 1);
+		WriteSetting32(SETTING_ADVANCED_MODE_DEVICE, 1);
+		return FALSE;
 		// If the user hasn't set the interval in the dialog, set to default
 		if ( (ReadSetting32(SETTING_UPDATE_INTERVAL) == 0) ||
 			 (ReadSetting32(SETTING_UPDATE_INTERVAL) == -1) )
 			WriteSetting32(SETTING_UPDATE_INTERVAL, 86400);
-	}
 	SetFidoCheck();
 	return TRUE;
 }
@@ -1820,6 +1798,7 @@ LPCDLGTEMPLATE GetDialogTemplate(int Dialog_ID)
 		memmove((void*)dst, (void*)src, size - (src - start));
 	} else {
 		uprintf("Could not locate font for %s!", get_name_from_id(Dialog_ID));
+		uprintf("Are you running on Windows 7+");
 	}
 	return rcTemplate;
 }

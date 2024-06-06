@@ -54,7 +54,7 @@
 #else
 #define APPLICATION_ARCH            "(Unknown Arch)"
 #endif
-#define COMPANY_NAME                "Akeo Consulting"
+#define COMPANY_NAME                "Alex313031"
 #define STR_NO_LABEL                "NO_LABEL"
 // Yes, there exist characters between these seemingly empty quotes!
 #define LEFT_TO_RIGHT_MARK          "‎"
@@ -746,7 +746,7 @@ extern uint16_t GetSyslinuxVersion(char* buf, size_t buf_size, char** ext);
 extern BOOL SetAutorun(const char* path);
 extern char* FileDialog(BOOL save, char* path, const ext_t* ext, UINT* selected_ext);
 extern BOOL FileIO(enum file_io_type io_type, char* path, char** buffer, DWORD* size);
-extern uint8_t* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate);
+extern unsigned char* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate);
 extern DWORD GetResourceSize(HMODULE module, char* name, char* type, const char* desc);
 extern DWORD RunCommandWithProgress(const char* cmdline, const char* dir, BOOL log, int msg);
 #define RunCommand(cmd, dir, log) RunCommandWithProgress(cmd, dir, log, 0)

@@ -772,7 +772,8 @@ static BOOL WriteMBR(HANDLE hPhysicalDrive)
 {
 	BOOL r = FALSE;
 	BOOL needs_masquerading = HAS_WINPE(img_report) && (!img_report.uses_minint);
-	uint8_t* buffer = NULL;
+	DWORD size;
+	unsigned char* buffer = NULL;
 	FAKE_FD fake_fd = { 0 };
 	FILE* fp = (FILE*)&fake_fd;
 	const char* using_msg = "Using %s MBR";
@@ -791,7 +792,7 @@ static BOOL WriteMBR(HANDLE hPhysicalDrive)
 
 	// FormatEx rewrites the MBR and removes the LBA attribute of FAT16
 	// and FAT32 partitions - we need to correct this in the MBR
-	buffer = (uint8_t*)_mm_malloc(SelectedDrive.SectorSize, 16);
+	buffer = (unsigned char*)_mm_malloc(SelectedDrive.SectorSize, 16);
 	if (buffer == NULL) {
 		uprintf("Could not allocate memory for MBR");
 		ErrorStatus = RUFUS_ERROR(ERROR_NOT_ENOUGH_MEMORY);
@@ -897,7 +898,7 @@ windows_mbr:
 
 notify:
 	// Tell the system we've updated the disk properties
-	if (!DeviceIoControl(hPhysicalDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, NULL, NULL))
+	if (!DeviceIoControl(hPhysicalDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, &size, NULL))
 		uprintf("Failed to notify system about disk properties update: %s", WindowsErrorString());
 
 out:
@@ -1361,7 +1362,6 @@ static BOOL WriteDrive(HANDLE hPhysicalDrive, BOOL bZeroDrive)
 				ErrorStatus = RUFUS_ERROR(ERROR_READ_FAULT);
 				goto out;
 			}
-
 
 			// 2. WriteFile fails unless the size is a multiple of sector size
 			if (read_size[read_bufnum] % SelectedDrive.SectorSize != 0) {
