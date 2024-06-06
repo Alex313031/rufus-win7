@@ -311,8 +311,7 @@ char* GetLogicalName(DWORD DriveIndex, uint64_t PartitionOffset, BOOL bKeepTrail
 			continue;
 		}
 
-		r = DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0,
-			&DiskExtents, sizeof(DiskExtents), &size, NULL);
+		r = DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, &DiskExtents, sizeof(DiskExtents), &size, NULL);
 		if ((!r) || (size == 0)) {
 			suprintf("Could not get Disk Extents: %s", r ? "(empty data)" : WindowsErrorString());
 			safe_closehandle(hDrive);
@@ -1063,11 +1062,10 @@ int GetDriveNumber(HANDLE hDrive, char* path)
 	BOOL s;
 	int r = -1;
 
-	if (!DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0,
-		&DiskExtents, sizeof(DiskExtents), &size, NULL) || (size <= 0) || (DiskExtents.NumberOfDiskExtents < 1)) {
+	if (!DeviceIoControl(hDrive, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, &DiskExtents, sizeof(DiskExtents), &size, NULL) ||
+		(size <= 0) || (DiskExtents.NumberOfDiskExtents < 1)) {
 		// DiskExtents are NO_GO (which is the case for external USB HDDs...)
-		s = DeviceIoControl(hDrive, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0, &DeviceNumber, sizeof(DeviceNumber),
-			&size, NULL);
+		s = DeviceIoControl(hDrive, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0, &DeviceNumber, sizeof(DeviceNumber), &size, NULL);
 		if ((!s) || (size == 0)) {
 			uuprintf("Could not get device number for device %s %s", path, s ? "(empty data)" : WindowsErrorString());
 			return -1;
@@ -1181,8 +1179,7 @@ static BOOL _GetDriveLettersAndType(DWORD DriveIndex, char* drive_letters, UINT*
 	// handling to determine if they are fixed or removable.
 	if ((drives_found == 0) && (drive_type != NULL)) {
 		hPhysical = GetPhysicalHandle(DriveIndex + DRIVE_INDEX_MIN, FALSE, FALSE, FALSE);
-		r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-			NULL, 0, geometry, sizeof(geometry), &size, NULL);
+		r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, geometry, sizeof(geometry), &size, NULL);
 		safe_closehandle(hPhysical);
 		if (r && size > 0) {
 			if (DiskGeometry->Geometry.MediaType == FixedMedia)
@@ -1405,8 +1402,7 @@ BOOL IsMediaPresent(DWORD DriveIndex)
 	BYTE geometry[128];
 
 	hPhysical = GetPhysicalHandle(DriveIndex, FALSE, FALSE, TRUE);
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-			NULL, 0, geometry, sizeof(geometry), &size, NULL) && (size > 0);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, geometry, sizeof(geometry), &size, NULL) && (size > 0);
 	safe_closehandle(hPhysical);
 	return r;
 }
@@ -1509,8 +1505,7 @@ uint64_t GetEspOffset(DWORD DriveIndex)
 	if (hPhysical == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
-		NULL, 0, layout, sizeof(layout), &size, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, layout, sizeof(layout), &size, NULL);
 	if (!r || size <= 0) {
 		uprintf("Could not get layout for drive 0x%02x: %s", DriveIndex, WindowsErrorString());
 		goto out;
@@ -2583,8 +2578,7 @@ BOOL InitializeDisk(HANDLE hDrive)
 	uprintf("Initializing disk...");
 
 	size = sizeof(CreateDisk);
-	r = DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK,
-			(BYTE*)&CreateDisk, size, NULL, 0, &size, NULL);;
+	r = DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, size, NULL, 0, &size, NULL);
 	if (!r) {
 		uprintf("Could not delete drive layout: %s", WindowsErrorString());
 		return FALSE;
@@ -2633,8 +2627,7 @@ BOOL IsMsDevDrive(DWORD DriveIndex)
 	if (hPhysical == INVALID_HANDLE_VALUE)
 		goto out;
 
-	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
-		NULL, 0, layout, sizeof(layout), &size, NULL);
+	r = DeviceIoControl(hPhysical, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, layout, sizeof(layout), &size, NULL);
 	if (!r || size <= 0)
 		goto out;
 

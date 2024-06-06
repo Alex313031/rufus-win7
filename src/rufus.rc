@@ -422,7 +422,7 @@ BEGIN
             VALUE "LegalTrademarks", "https://www.gnu.org/licenses/gpl-3.0.html"
             VALUE "OriginalFilename", "rufus-4.6.exe"
             VALUE "ProductName", "Rufus"
-            ALUE "ProductVersion", "4.6.2182"
+            VALUE "ProductVersion", "4.6.2182"
         END
     END
     BLOCK "VarFileInfo"
