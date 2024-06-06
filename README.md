@@ -6,7 +6,7 @@ Rufus: The Reliable USB Formatting Utility - Windows 7 Compatible Builds!
 [![Download Stats](https://img.shields.io/github/downloads/Alex313031/rufus-win7/total.svg?label=Downloads&style=flat-square)](https://github.com/Alex313031/rufus-win7/releases)
 [![Contributors](https://img.shields.io/github/contributors/pbatard/rufus.svg?style=flat-square&label=Contributors)](https://github.com/pbatard/rufus/graphs/contributors)
 
-![Rufus logo](https://raw.githubusercontent.com/pbatard/rufus/master/res/icons/rufus-128.png)
+![Rufus logo](https://raw.githubusercontent.com/Alex313031/rufus-win7/master/res/icons/rufus-128.png)
 
 Rufus is a utility that helps format and create bootable USB flash drives.
 
@@ -58,5 +58,5 @@ easily accessible log, or through the [Windows debug facility](https://docs.micr
 Enhancements/Bugs
 -----------------
 
-Please use the [GitHub issue tracker](https://github.com/Alex313031/rufus-win7/issues)
+Please use the [GitHub Issue tracker](https://github.com/Alex313031/rufus-win7/issues)
 for reporting problems or suggesting new features.
