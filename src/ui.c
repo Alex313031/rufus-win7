@@ -1022,7 +1022,7 @@ static INT_PTR CALLBACK ProgressCallback(HWND hCtrl, UINT message, WPARAM wParam
 void CreateAdditionalControls(HWND hDlg)
 {
 	int buttons_list[] = { IDC_ABOUT, IDC_LANG, IDC_LOG };
-	int bitmaps_list[] = { 1, 0, 2, 3 };
+	int bitmaps_list[] = { 1, 0, 3 };
 	HINSTANCE hDll;
 	HIMAGELIST hToolbarImageList;
 	HICON hIcon, hIconUp, hIconDown;

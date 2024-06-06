@@ -21,6 +21,7 @@
 #include <windows.h>
 #include <ioapiset.h>
 #include "msapi_utf8.h"
+#include "rufus.h"
 
 #pragma once
 
@@ -170,10 +171,12 @@ static __inline BOOL GetSizeAsync(HANDLE h, LPDWORD lpNumberOfBytes)
 		return FALSE;
 	}
 	fd->Overlapped.bOffsetUpdated = TRUE;
-	// No timeout call for Windows 7
-	if (!GetOverlappedResult(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
-		lpNumberOfBytes, (fd->iStatus < 0)))
-		return (GetLastError() == ERROR_HANDLE_EOF);
+	if (WindowsVersion.Version >= WINDOWS_XP) {
+		// No timeout call for Windows 7
+		if (!GetOverlappedResult(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
+			lpNumberOfBytes, (fd->iStatus < 0)))
+			return (GetLastError() == ERROR_HANDLE_EOF);
+	}
 	fd->Overlapped.Offset += *lpNumberOfBytes;
 	return TRUE;
 }

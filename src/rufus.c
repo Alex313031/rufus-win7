@@ -2125,9 +2125,9 @@ static void InitDialog(HWND hDlg)
 	CreateTooltip(GetDlgItem(hDlg, IDC_PERSISTENCE_UNITS), lmprintf(MSG_126), 30000);
 
 	if (!advanced_mode_device)	// Hide as needed, since we display the advanced controls by default
-		ToggleAdvancedDeviceOptions(TRUE);
+		ToggleAdvancedDeviceOptions(FALSE);
 	if (!advanced_mode_format)
-		ToggleAdvancedFormatOptions(TRUE);
+		ToggleAdvancedFormatOptions(FALSE);
 	ToggleImageOptions();
 
 	// Process commandline parameters
@@ -3570,19 +3570,19 @@ skip_args_processing:
 	GetWindowsVersion(&WindowsVersion);
 	// Force a version if specified as parameter, but without allowing folks running
 	// a version of Windows we no longer support to use the option as a bypass!
-	if (WindowsVersion.Version > WINDOWS_7 && forced_windows_version != 0)
+	if (WindowsVersion.Version > WINDOWS_XP && forced_windows_version != 0)
 		WindowsVersion.Version = forced_windows_version;
 
 	// ...and nothing of value was lost
-	if (WindowsVersion.Version < WINDOWS_7) {
+	if (WindowsVersion.Version < WINDOWS_XP) {
 		// Load the translation before we print the error
 		get_loc_data_file(loc_file, selected_locale);
 		right_to_left_mode = ((selected_locale->ctrl_id) & LOC_RIGHT_TO_LEFT);
 		// Set MB_SYSTEMMODAL to prevent Far Manager from stealing focus...
 		MessageBoxExU(NULL,
 			lmprintf(MSG_294,
-				(WindowsVersion.Version == WINDOWS_7) ? 3 : 2,
-				(WindowsVersion.Version == WINDOWS_7) ? 22 : 18),
+				(WindowsVersion.Version == WINDOWS_XP) ? 3 : 2,
+				(WindowsVersion.Version == WINDOWS_XP) ? 22 : 18),
 			lmprintf(MSG_293), MB_ICONSTOP | MB_IS_RTL | MB_SYSTEMMODAL, selected_langid);
 		goto out;
 	}
