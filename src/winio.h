@@ -19,7 +19,9 @@
 */
 
 #include <windows.h>
+#include <ioapiset.h>
 #include "msapi_utf8.h"
+#include "rufus.h"
 
 #pragma once
 
@@ -124,11 +126,12 @@ static __inline BOOL WriteFileAsync(HANDLE h, LPVOID lpBuffer, DWORD nNumberOfBy
 	ASYNC_FD* fd = (ASYNC_FD*)h;
 	fd->Overlapped.bOffsetUpdated = FALSE;
 	if (!WriteFile(fd->hFile, lpBuffer, nNumberOfBytesToWrite, NULL,
-		(OVERLAPPED*)&fd->Overlapped))
+		(OVERLAPPED*)&fd->Overlapped)) {
 		// TODO: Is it possible to get ERROR_HANDLE_EOF here?
 		fd->iStatus = (GetLastError() == ERROR_IO_PENDING) ? -1 : 0;
-	else
+	} else {
 		fd->iStatus = 1;
+	}
 	return (fd->iStatus != 0);
 }
 
@@ -168,10 +171,12 @@ static __inline BOOL GetSizeAsync(HANDLE h, LPDWORD lpNumberOfBytes)
 		return FALSE;
 	}
 	fd->Overlapped.bOffsetUpdated = TRUE;
-	if (!GetOverlappedResultEx(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
-		lpNumberOfBytes, WRITE_TIMEOUT, (fd->iStatus < 0)))
-		// When reading from VHD/VHDX we get SECTOR_NOT_FOUND rather than EOF for the end of the drive
-		return (GetLastError() == ERROR_HANDLE_EOF || GetLastError() == ERROR_SECTOR_NOT_FOUND);
+	if (WindowsVersion.Version >= WINDOWS_XP) {
+		// No timeout call for Windows 7
+		if (!GetOverlappedResult(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
+			lpNumberOfBytes, (fd->iStatus < 0)))
+			return (GetLastError() == ERROR_HANDLE_EOF);
+	}
 	fd->Overlapped.Offset += *lpNumberOfBytes;
 	return TRUE;
 }
