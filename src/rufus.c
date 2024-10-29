@@ -2162,11 +2162,14 @@ static void InitDialog(HWND hDlg)
 	CreateTooltip(GetDlgItem(hDlg, IDC_PERSISTENCE_SIZE), lmprintf(MSG_125), 30000);
 	CreateTooltip(GetDlgItem(hDlg, IDC_PERSISTENCE_UNITS), lmprintf(MSG_126), 30000);
 
-	if (!advanced_mode_device)	// Hide as needed, since we display the advanced controls by default
-		ToggleAdvancedDeviceOptions(FALSE);
-	if (!advanced_mode_format)
-		ToggleAdvancedFormatOptions(FALSE);
+	// Display advanced controls by default
+	//if (!advanced_mode_device)	// Hide as needed, since we display the advanced controls by default
+		//ToggleAdvancedDeviceOptions(FALSE);
+	//if (!advanced_mode_format)
+		//ToggleAdvancedFormatOptions(FALSE);
 	ToggleImageOptions();
+	// Open Log Window by default
+	SendMessage(hMainDialog, WM_COMMAND, IDC_LOG, 0);
 
 	// Process commandline parameters
 	if (img_provided) {
