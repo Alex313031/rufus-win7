@@ -415,12 +415,12 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "Comments", "https://rufus.ie"
-            VALUE "CompanyName", "Akeo Consulting"
-            VALUE "FileDescription", "Rufus"
+            VALUE "Comments", "https://github.com/Alex313031/rufus-win7"
+            VALUE "CompanyName", "Alex313031"
+            VALUE "FileDescription", "Rufus for Windows 7"
             VALUE "FileVersion", "4.6.2208"
             VALUE "InternalName", "Rufus"
-            VALUE "LegalCopyright", "© 2011-2024 Pete Batard (GPL v3)"
+            VALUE "LegalCopyright", "© 2024 Alex313031 (GPL v3)"
             VALUE "LegalTrademarks", "https://www.gnu.org/licenses/gpl-3.0.html"
             VALUE "OriginalFilename", "rufus-4.6.exe"
             VALUE "ProductName", "Rufus"
