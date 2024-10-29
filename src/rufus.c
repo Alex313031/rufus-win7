@@ -2053,6 +2053,7 @@ static void InitDialog(HWND hDlg)
 			uprintf(timestamp);
 		}
 	}
+	uprintf("Welcome to the Reliable USB Formatting Utility!");
 	uprintf(APPLICATION_NAME " " APPLICATION_ARCH " v%d.%d.%d%s%s", rufus_version[0], rufus_version[1], rufus_version[2],
 		IsAlphaOrBeta(), (ini_file != NULL)?"(Portable)": (appstore_version ? "(AppStore version)" : ""));
 	// Display a notice if running x86 emulation on ARM
