@@ -1,0 +1,2279 @@
+diff --git a/.github/FUNDING.yml b/.github/FUNDING.yml
+new file mode 100644
+index 00000000..0b337b56
+--- /dev/null
++++ b/.github/FUNDING.yml
+@@ -0,0 +1,5 @@
++# These are supported funding model platforms
++
++github: ['Alex313031']
++custom: ['https://paypal.me/alex313031?country.x=US&locale.x=en_US']
++patreon: ThoriumDeveloper
+diff --git a/.github/workflows/codeql.yml b/.github/workflows/codeql.yml
+deleted file mode 100644
+index 040896d5..00000000
+--- a/.github/workflows/codeql.yml
++++ /dev/null
+@@ -1,59 +0,0 @@
+-name: "CodeQL"
+-
+-on:
+-  push:
+-    branches: [master]
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-  pull_request:
+-    branches: [master]
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-
+-env:
+-  SOLUTION_FILE_PATH: ./rufus.sln
+-  BUILD_CONFIGURATION: Release
+-  TARGET_PLATFORM: x64
+-
+-jobs:
+-  CodeQL-Build:
+-    runs-on: windows-latest
+-
+-    permissions:
+-      security-events: write
+-
+-    steps:
+-    - name: Checkout repository
+-      uses: actions/checkout@v4
+-
+-    - name: Initialize CodeQL
+-      uses: github/codeql-action/init@v3
+-      with:
+-        languages: cpp
+-
+-    - name: Add MSBuild to PATH
+-      uses: microsoft/setup-msbuild@v2
+-      with:
+-        msbuild-architecture: x64
+-
+-    - name: Build 
+-      run: msbuild ${{env.SOLUTION_FILE_PATH}} /m /p:Configuration=${{ env.BUILD_CONFIGURATION}},Platform=${{ env.TARGET_PLATFORM }}
+-
+-    - name: Perform CodeQL Analysis
+-      uses: github/codeql-action/analyze@v3
+diff --git a/.github/workflows/coverity.yml b/.github/workflows/coverity.yml
+deleted file mode 100644
+index 98bcca8d..00000000
+--- a/.github/workflows/coverity.yml
++++ /dev/null
+@@ -1,64 +0,0 @@
+-name: Coverity
+-
+-on:
+-  push:
+-    branches: [master]
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-
+-env:
+-  SOLUTION_FILE_PATH: ./rufus.sln
+-  EMAIL: pete@akeo.ie
+-  BUILD_CONFIGURATION: Release
+-  TARGET_PLATFORM: x64
+-  COVERITY_PROJECT_NAME: pbatard%2Frufus
+-
+-jobs:
+-  Coverity-Build:
+-    runs-on: windows-latest
+-
+-    steps:
+-    - name: Checkout repository
+-      uses: actions/checkout@v4
+-      with:
+-        fetch-depth: 0
+-        submodules: recursive
+-
+-    - name: Download Coverity
+-      run: |
+-        curl -d "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=${{ env.COVERITY_PROJECT_NAME }}" -L https://scan.coverity.com/download/cxx/win64 -o cov-analysis-win64.zip
+-        7z x cov-analysis-win64.zip
+-        del cov-analysis-win64.zip
+-        move cov-analysis-win64* cov-analysis-win64
+-
+-    - name: Add Coverity to PATH
+-      shell: bash
+-      run: echo "${{github.workspace}}/cov-analysis-win64/bin" >> $GITHUB_PATH
+-
+-    - name: Add MSBuild to PATH
+-      uses: microsoft/setup-msbuild@v2
+-
+-    - name: Build with Coverity
+-      run: | 
+-        cov-configure --msvc
+-        cov-build.exe --dir cov-int msbuild ${{ env.SOLUTION_FILE_PATH }} /m /p:Configuration=${{ env.BUILD_CONFIGURATION }},Platform=${{ env.TARGET_PLATFORM }}
+-
+-    - name: Publish Coverity artifacts
+-      uses: actions/upload-artifact@v4
+-      with:
+-        name: cov-int
+-        path: cov-int/
+-      
+-    - name: Upload Coverity build for analysis
+-      run: |
+-        7z a -r cov-int.zip cov-int
+-        curl --form email=${{ env.EMAIL }} --form token=${{ secrets.COVERITY_SCAN_TOKEN }} --form file=@cov-int.zip --form version="${{ env.GITHUB_SHA }}" --form description="Automated build" https://scan.coverity.com/builds?project=${{ env.COVERITY_PROJECT_NAME }}
+-
+diff --git a/.github/workflows/lock.yml b/.github/workflows/lock.yml
+deleted file mode 100644
+index 9f85edcf..00000000
+--- a/.github/workflows/lock.yml
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# Configuration for https://github.com/dessant/lock-threads
+-name: '[cron] Lock stale issues'
+-
+-on:
+-  schedule:
+-    - cron: '33 22 * * *'
+-
+-jobs:
+-  lock:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - uses: dessant/lock-threads@v5
+-        with:
+-          github-token: ${{ secrets.GITHUB_TOKEN }}
+-          issue-inactive-days: '90'
+-          issue-comment: >
+-            This thread has been automatically locked since there has not been
+-            any recent activity after it was closed. Please open a new issue
+-            if you think you have a related problem or query.
+diff --git a/.github/workflows/mingw.yml b/.github/workflows/mingw.yml
+deleted file mode 100644
+index c56eacc6..00000000
+--- a/.github/workflows/mingw.yml
++++ /dev/null
+@@ -1,113 +0,0 @@
+-name: MinGW
+-
+-on: 
+-  push:
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-  pull_request:
+-    branches: [master]
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-
+-jobs:
+-  MinGW-Build:
+-    runs-on: windows-latest
+-
+-    strategy:
+-      matrix:
+-        include:
+-          - { sys: mingw64, env: x86_64, exe: rufus.exe }
+-          - { sys: mingw32, env: i686, exe: rufus_x86.exe }
+-
+-    defaults:
+-      run:
+-        shell: msys2 {0}
+-
+-    steps:
+-    - name: Install MinGW
+-      uses: msys2/setup-msys2@v2
+-      with:
+-        msystem: ${{ matrix.sys }}
+-        update: true
+-        install: >-
+-          mingw-w64-${{ matrix.env }}-toolchain
+-          base-devel
+-          autotools
+-          git
+-          upx
+-
+-    - name: Checkout repository
+-      uses: actions/checkout@v4
+-      with:
+-        fetch-depth: 0
+-        submodules: recursive
+-
+-    - name: Set ALPHA
+-      id: set_alpha
+-      shell: bash
+-      if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+-      # This ONLY works if the shell is bash or if using $env:GITHUB_OUTPUT
+-      run: |
+-        echo "option=--enable-alpha" >> $GITHUB_OUTPUT
+-        sed -b -i 's/VALUE "InternalName", "Rufus"/VALUE "InternalName", "Rufus (ALPHA)"/' ./src/rufus.rc
+-
+-    - name: Set BETA
+-      id: set_beta
+-      shell: bash
+-      if: ${{ startsWith(github.ref, 'refs/tags/') && contains(github.ref, 'BETA') }}
+-      # This ONLY works if the shell is bash or if using $env:GITHUB_OUTPUT
+-      run: |
+-        echo "option=--enable-beta" >> $GITHUB_OUTPUT
+-        sed -b -i 's/VALUE "InternalName", "Rufus"/VALUE "InternalName", "Rufus (BETA)"/' ./src/rufus.rc
+-
+-    - name: Build
+-      run: |
+-        ./configure --disable-debug ${{ steps.set_alpha.outputs.option }} ${{ steps.set_beta.outputs.option }}
+-        make -j4
+-        mv ./src/rufus.exe ./${{ matrix.exe }}
+-        strip ./${{ matrix.exe }}
+-        upx --lzma --best ./${{ matrix.exe }}
+-
+-    - name: Display SHA-256
+-      run: sha256sum ./${{ matrix.exe }}
+-
+-    - name: Upload to VirusTotal
+-      if: ${{ github.event_name == 'push' && matrix.env == 'x86_64'  }}
+-      continue-on-error: true
+-      run: |
+-        curl --request POST --url https://www.virustotal.com/vtapi/v2/file/scan --form apikey=${{ secrets.VIRUSTOTAL_API_KEY }} --form file=@./${{ matrix.exe }}
+-        curl --request POST --url https://www.virustotal.com/api/v3/monitor/items --header 'x-apikey: ${{ secrets.VIRUSTOTAL_API_KEY }}' --form path='/${{ matrix.exe }}' --form file=@./${{ matrix.exe }}
+-
+-    - name: Upload artifacts
+-      if: ${{ github.event_name == 'push' }}
+-      uses: actions/upload-artifact@v4
+-      with:
+-        name: ${{ matrix.sys }}
+-        path: ./*.exe
+-
+-  Extra-Step-To-Merge-Artifacts-Thanks-To-Upload-Artifact-v4-Breaking-Backwards-Compatibility:
+-    runs-on: windows-latest
+-    needs: MinGW-Build
+-    steps:
+-      - name: Merge Artifacts
+-        uses: actions/upload-artifact/merge@v4
+-        if: ${{ github.event_name == 'push' }}
+-        with:
+-          name: MinGW
+-          delete-merged: true
+\ No newline at end of file
+diff --git a/.github/workflows/setup.yml b/.github/workflows/setup.yml
+deleted file mode 100644
+index 98c62dc3..00000000
+--- a/.github/workflows/setup.yml
++++ /dev/null
+@@ -1,52 +0,0 @@
+-name: setup
+-run-name: Windows setup wrapper build
+-
+-on: 
+-  workflow_dispatch:
+-    branches: [ master ]
+-
+-env:
+-  SOLUTION_FILE_PATH: ./res/setup/setup.sln
+-  BUILD_CONFIGURATION: Release
+-
+-jobs:
+-  VS2022-Build:
+-    runs-on: windows-latest
+-
+-    strategy:
+-      matrix:
+-        TARGET_PLATFORM: [x64, arm64]
+-
+-    steps:
+-    - name: Checkout repository
+-      uses: actions/checkout@v4
+-
+-    - name: Add MSBuild to PATH
+-      uses: microsoft/setup-msbuild@v2
+-      with:
+-        msbuild-architecture: x64
+-
+-    - name: Build
+-      shell: cmd
+-      run: |
+-        msbuild ${{ env.SOLUTION_FILE_PATH }} /m /p:Configuration=${{ env.BUILD_CONFIGURATION }},Platform=${{ matrix.TARGET_PLATFORM }}
+-        move .\res\setup\${{ matrix.TARGET_PLATFORM }}\Release\setup.exe .\setup_${{ matrix.TARGET_PLATFORM }}.exe
+-
+-    - name: Display SHA-256
+-      run: sha256sum ./setup_${{ matrix.TARGET_PLATFORM }}.exe
+-
+-    - name: Upload artifacts
+-      uses: actions/upload-artifact@v4
+-      with:
+-        name: ${{ matrix.TARGET_PLATFORM }}
+-        path: ./*.exe
+-
+-  Extra-Step-To-Merge-Artifacts-Thanks-To-Upload-Artifact-v4-Breaking-Backwards-Compatibility:
+-    runs-on: windows-latest
+-    needs: VS2022-Build
+-    steps:
+-      - name: Merge Artifacts
+-        uses: actions/upload-artifact/merge@v4
+-        with:
+-          name: setup
+-          delete-merged: true
+diff --git a/.github/workflows/vs2022.yml b/.github/workflows/vs2022.yml
+deleted file mode 100644
+index 249f7ad4..00000000
+--- a/.github/workflows/vs2022.yml
++++ /dev/null
+@@ -1,106 +0,0 @@
+-name: VS2022
+-
+-on: 
+-  push:
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-  pull_request:
+-    branches: [master]
+-    paths-ignore:
+-      - '.gitignore'
+-      - '.gitattributes'
+-      - 'res/**'
+-      - '**.cmd'
+-      - '**.md'
+-      - '**.rc'
+-      - '**.sh'
+-      - '**.txt'
+-      - '**.xml'
+-
+-env:
+-  SOLUTION_FILE_PATH: ./rufus.sln
+-  BUILD_CONFIGURATION: Release
+-
+-jobs:
+-  VS2022-Build:
+-    runs-on: windows-latest
+-
+-    strategy:
+-      matrix:
+-        TARGET_PLATFORM: [x64, x86, arm64, arm]
+-
+-    steps:
+-    - name: Checkout repository
+-      uses: actions/checkout@v4
+-      with:
+-        fetch-depth: 0
+-        submodules: recursive
+-
+-    - name: Add MSBuild to PATH
+-      uses: microsoft/setup-msbuild@v2
+-      with:
+-        msbuild-architecture: x64
+-
+-    - name: Set ALPHA
+-      id: set_alpha
+-      shell: bash
+-      if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+-      # This ONLY works if the shell is bash or if using $env:GITHUB_OUTPUT
+-      run: |
+-        echo "option=/DALPHA" >> $GITHUB_OUTPUT
+-        sed -b -i 's/VALUE "InternalName", "Rufus"/VALUE "InternalName", "Rufus (ALPHA)"/' ./src/rufus.rc
+-
+-    - name: Set BETA
+-      id: set_beta
+-      shell: bash
+-      if: ${{ startsWith(github.ref, 'refs/tags/') && contains(github.ref, 'BETA') }}
+-      # This ONLY works if the shell is bash or if using $env:GITHUB_OUTPUT
+-      run: |
+-        echo "option=/DBETA" >> $GITHUB_OUTPUT
+-        sed -b -i 's/VALUE "InternalName", "Rufus"/VALUE "InternalName", "Rufus (BETA)"/' ./src/rufus.rc
+-
+-    - name: Build
+-      shell: cmd
+-      run: |
+-        set ExternalCompilerOptions=${{ steps.set_alpha.outputs.option }} ${{ steps.set_beta.outputs.option }}
+-        msbuild ${{ env.SOLUTION_FILE_PATH }} /m /p:Configuration=${{ env.BUILD_CONFIGURATION }},Platform=${{ matrix.TARGET_PLATFORM }},ForceImportBeforeCppTargets=%GITHUB_WORKSPACE%\.vs\Generate.PDB.props
+-        move .\${{ matrix.TARGET_PLATFORM }}\Release\rufus.exe .\rufus_${{ matrix.TARGET_PLATFORM }}.exe
+-        move .\${{ matrix.TARGET_PLATFORM }}\Release\rufus.pdb .\rufus_${{ matrix.TARGET_PLATFORM }}.pdb
+-
+-    - name: Display SHA-256
+-      run: sha256sum ./rufus_${{ matrix.TARGET_PLATFORM }}.exe
+-
+-    - name: Upload to VirusTotal
+-      continue-on-error: true
+-      if: ${{ github.event_name == 'push' }}
+-      run: |
+-        curl --request POST --url https://www.virustotal.com/vtapi/v2/file/scan --form apikey=${{ secrets.VIRUSTOTAL_API_KEY }} --form file=@./rufus_${{ matrix.TARGET_PLATFORM }}.exe
+-        curl --request POST --url https://www.virustotal.com/api/v3/monitor/items --header 'x-apikey: ${{ secrets.VIRUSTOTAL_API_KEY }}' --form path='/rufus_${{ matrix.TARGET_PLATFORM }}.exe' --form file=@./rufus_${{ matrix.TARGET_PLATFORM }}.exe
+-
+-    - name: Upload artifacts
+-      uses: actions/upload-artifact@v4
+-      if: ${{ github.event_name == 'push' }}
+-      with:
+-        name: ${{ matrix.TARGET_PLATFORM }}
+-        path: |
+-          ./*.exe
+-          ./*.pdb
+-
+-  Extra-Step-To-Merge-Artifacts-Thanks-To-Upload-Artifact-v4-Breaking-Backwards-Compatibility:
+-    runs-on: windows-latest
+-    needs: VS2022-Build
+-    steps:
+-      - name: Merge Artifacts
+-        uses: actions/upload-artifact/merge@v4
+-        if: ${{ github.event_name == 'push' }}
+-        with:
+-          name: VS2022
+-          delete-merged: true
+diff --git a/.gitignore b/.gitignore
+index b1585858..530e5cdc 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -66,3 +66,5 @@ embedded.loc
+ /rufus_files
+ stamp-h1
+ /.vs/rufus
++/.vs/Rufus
++/release/
+diff --git a/.vs/bled.vcxproj b/.vs/bled.vcxproj
+index 94e9e48e..a2132ebb 100644
+--- a/.vs/bled.vcxproj
++++ b/.vs/bled.vcxproj
+@@ -83,49 +83,49 @@
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+@@ -234,6 +234,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+       <AdditionalIncludeDirectories>..\src</AdditionalIncludeDirectories>
+@@ -254,6 +255,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <PreprocessorDefinitions>_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -274,6 +276,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <PreprocessorDefinitions>_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -294,6 +297,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+       <AdditionalIncludeDirectories>..\src</AdditionalIncludeDirectories>
+@@ -313,4 +317,4 @@
+     </Lib>
+   </ItemDefinitionGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/ext2fs.vcxproj b/.vs/ext2fs.vcxproj
+index 521437b2..47d649ac 100644
+--- a/.vs/ext2fs.vcxproj
++++ b/.vs/ext2fs.vcxproj
+@@ -122,49 +122,49 @@
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+@@ -273,6 +273,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing</AdditionalIncludeDirectories>
+@@ -294,6 +295,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -314,6 +316,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -334,6 +337,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing</AdditionalIncludeDirectories>
+@@ -352,4 +356,4 @@
+     </Lib>
+   </ItemDefinitionGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/getopt.vcxproj b/.vs/getopt.vcxproj
+index 767adf07..33820999 100644
+--- a/.vs/getopt.vcxproj
++++ b/.vs/getopt.vcxproj
+@@ -44,39 +44,39 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+@@ -84,12 +84,12 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+@@ -142,6 +142,7 @@
+       <WarningLevel>Level3</WarningLevel>
+       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+       <DisableSpecificWarnings>28252;28253</DisableSpecificWarnings>
++      <Optimization>Disabled</Optimization>
+       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+     </ClCompile>
+     <Lib>
+@@ -155,6 +156,7 @@
+       <WarningLevel>Level3</WarningLevel>
+       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+       <DisableSpecificWarnings>28252;28253</DisableSpecificWarnings>
++      <Optimization>Disabled</Optimization>
+       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+     </ClCompile>
+     <Lib>
+@@ -227,6 +229,7 @@
+       <TargetEnvironment>X64</TargetEnvironment>
+     </Midl>
+     <ClCompile>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+       <WarningLevel>Level3</WarningLevel>
+@@ -249,4 +252,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/libcdio-driver.vcxproj b/.vs/libcdio-driver.vcxproj
+index 1e8b35c7..97afd1ce 100644
+--- a/.vs/libcdio-driver.vcxproj
++++ b/.vs/libcdio-driver.vcxproj
+@@ -76,53 +76,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -210,6 +210,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_CONFIG_H;_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\libcdio;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -276,6 +277,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_CONFIG_H;_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\libcdio;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -297,4 +299,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/libcdio-iso9660.vcxproj b/.vs/libcdio-iso9660.vcxproj
+index beadf8e6..c5f18496 100644
+--- a/.vs/libcdio-iso9660.vcxproj
++++ b/.vs/libcdio-iso9660.vcxproj
+@@ -69,53 +69,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -203,6 +203,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_CONFIG_H;_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\libcdio;..\src\libcdio\driver;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -269,6 +270,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_CONFIG_H;_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\libcdio;..\src\libcdio\driver;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -290,4 +292,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/libcdio-udf.vcxproj b/.vs/libcdio-udf.vcxproj
+index 60ce04b7..319dc294 100644
+--- a/.vs/libcdio-udf.vcxproj
++++ b/.vs/libcdio-udf.vcxproj
+@@ -62,53 +62,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -196,6 +196,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_CONFIG_H;_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\libcdio;..\src\libcdio\driver;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -262,6 +263,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>HAVE_CONFIG_H;_OFF_T_DEFINED;_off_t=__int64;off_t=_off_t;_FILE_OFFSET_BITS=64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\libcdio;..\src\libcdio\driver;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -283,4 +285,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/ms-sys.vcxproj b/.vs/ms-sys.vcxproj
+index 1679bf4f..798ce577 100644
+--- a/.vs/ms-sys.vcxproj
++++ b/.vs/ms-sys.vcxproj
+@@ -105,53 +105,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -242,6 +242,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src\ms-sys\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -312,6 +313,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src\ms-sys\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -334,4 +336,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/rufus.vcxproj b/.vs/rufus.vcxproj
+index 8c9b40f9..a1d3dea5 100644
+--- a/.vs/rufus.vcxproj
++++ b/.vs/rufus.vcxproj
+@@ -46,39 +46,39 @@
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+@@ -86,12 +86,12 @@
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <UseDebugLibraries>true</UseDebugLibraries>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+@@ -159,6 +159,7 @@
+       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+       <ExceptionHandling>Async</ExceptionHandling>
+       <DisableSpecificWarnings>4091;5255;28251;28252;28253;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <Optimization>Disabled</Optimization>
+       <AdditionalOptions>/utf-8 $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
+     </ClCompile>
+     <Link>
+@@ -190,6 +191,7 @@
+       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+       <ExceptionHandling>Async</ExceptionHandling>
+       <DisableSpecificWarnings>4091;5255;28251;28252;28253;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <Optimization>Disabled</Optimization>
+       <AdditionalOptions>/utf-8 $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
+     </ClCompile>
+     <Link>
+@@ -255,6 +257,7 @@
+       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+       <ExceptionHandling>Async</ExceptionHandling>
+       <DisableSpecificWarnings>4091;5255;28251;28252;28253;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <Optimization>MaxSpeed</Optimization>
+       <UndefinePreprocessorDefinitions>NDEBUG</UndefinePreprocessorDefinitions>
+       <AdditionalOptions>/utf-8 $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
+       <StringPooling>true</StringPooling>
+@@ -287,6 +290,7 @@
+       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+       <ExceptionHandling>Async</ExceptionHandling>
+       <DisableSpecificWarnings>4091;5255;28251;28252;28253;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <Optimization>MaxSpeed</Optimization>
+       <UndefinePreprocessorDefinitions>NDEBUG</UndefinePreprocessorDefinitions>
+       <AdditionalOptions>/utf-8 $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
+       <StringPooling>true</StringPooling>
+@@ -321,6 +325,7 @@
+       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+       <ExceptionHandling>Async</ExceptionHandling>
+       <DisableSpecificWarnings>4091;5255;28251;28252;28253;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <Optimization>MaxSpeed</Optimization>
+       <UndefinePreprocessorDefinitions>NDEBUG</UndefinePreprocessorDefinitions>
+       <AdditionalOptions>/utf-8 $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
+       <StringPooling>true</StringPooling>
+@@ -358,6 +363,7 @@
+       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+       <ExceptionHandling>Async</ExceptionHandling>
+       <DisableSpecificWarnings>4091;5255;28251;28252;28253;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <Optimization>MaxSpeed</Optimization>
+       <UndefinePreprocessorDefinitions>NDEBUG</UndefinePreprocessorDefinitions>
+       <AdditionalOptions>/utf-8 $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
+       <StringPooling>true</StringPooling>
+@@ -489,4 +495,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/syslinux-libfat.vcxproj b/.vs/syslinux-libfat.vcxproj
+index 732904b0..eea180fd 100644
+--- a/.vs/syslinux-libfat.vcxproj
++++ b/.vs/syslinux-libfat.vcxproj
+@@ -59,53 +59,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -196,6 +196,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>inline=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -266,6 +267,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>inline=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -288,4 +290,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/syslinux-libinstaller.vcxproj b/.vs/syslinux-libinstaller.vcxproj
+index 8af68451..166b09bf 100644
+--- a/.vs/syslinux-libinstaller.vcxproj
++++ b/.vs/syslinux-libinstaller.vcxproj
+@@ -58,53 +58,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -195,6 +195,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>inline=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -265,6 +266,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>inline=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -287,4 +289,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/.vs/syslinux-win.vcxproj b/.vs/syslinux-win.vcxproj
+index 5e77cea3..8d42c379 100644
+--- a/.vs/syslinux-win.vcxproj
++++ b/.vs/syslinux-win.vcxproj
+@@ -52,53 +52,53 @@
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>Unicode</CharacterSet>
+-    <PlatformToolset>v143</PlatformToolset>
++    <PlatformToolset>v142</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <PropertyGroup>
+@@ -189,6 +189,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>inline=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -259,6 +260,7 @@
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+       <WarningLevel>Level3</WarningLevel>
++      <Optimization>MaxSpeed</Optimization>
+       <PreprocessorDefinitions>inline=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <AdditionalIncludeDirectories>..\src;..\src\msvc-missing;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+@@ -281,4 +283,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+diff --git a/LICENSE.txt b/LICENSE.md
+similarity index 100%
+rename from LICENSE.txt
+rename to LICENSE.md
+diff --git a/README.md b/README.md
+index ff0352d8..d3e03e6f 100644
+--- a/README.md
++++ b/README.md
+@@ -1,22 +1,19 @@
+-Rufus: The Reliable USB Formatting Utility
+-==========================================
++Rufus: The Reliable USB Formatting Utility - Windows 7 Compatible Builds!
++=========================================================================
+ 
+-[![VS2022 Build Status](https://img.shields.io/github/actions/workflow/status/pbatard/rufus/vs2022.yml?branch=master&style=flat-square&label=VS2022%20Build)](https://github.com/pbatard/rufus/actions/workflows/vs2022.yml)
+-[![MinGW Build Status](https://img.shields.io/github/actions/workflow/status/pbatard/rufus/mingw.yml?branch=master&style=flat-square&label=MinGW%20Build)](https://github.com/pbatard/rufus/actions/workflows/mingw.yml)
+-[![Coverity Scan Status](https://img.shields.io/coverity/scan/2172.svg?style=flat-square&label=Coverity%20Analysis)](https://scan.coverity.com/projects/pbatard-rufus)  
+-[![Latest Release](https://img.shields.io/github/release-pre/pbatard/rufus.svg?style=flat-square&label=Latest%20Release)](https://github.com/pbatard/rufus/releases)
+-[![Licence](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square&label=License)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+-[![Download Stats](https://img.shields.io/github/downloads/pbatard/rufus/total.svg?label=Downloads&style=flat-square)](https://github.com/pbatard/rufus/releases)
++[![Latest Release](https://img.shields.io/github/release-pre/Alex313031/rufus-win7.svg?style=flat-square&label=Latest%20Release)](https://github.com/Alex313031/rufus-win7/releases)
++[![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square&label=License)](https://www.gnu.org/licenses/gpl-3.0.en.html)
++[![Download Stats](https://img.shields.io/github/downloads/Alex313031/rufus-win7/total.svg?label=Downloads&style=flat-square)](https://github.com/Alex313031/rufus-win7/releases)
+ [![Contributors](https://img.shields.io/github/contributors/pbatard/rufus.svg?style=flat-square&label=Contributors)](https://github.com/pbatard/rufus/graphs/contributors)
+ 
+-![Rufus logo](https://raw.githubusercontent.com/pbatard/rufus/master/res/icons/rufus-128.png)
++![Rufus logo](https://raw.githubusercontent.com/Alex313031/rufus-win7/master/res/icons/rufus-128.png)
+ 
+ Rufus is a utility that helps format and create bootable USB flash drives.
+ 
+ Features
+ --------
+ 
+-* Format USB, flash card and virtual drives to FAT/FAT32/NTFS/UDF/exFAT/ReFS/ext2/ext3
++* Format USB, flash card and virtual drives to FAT/FAT32/NTFS/UDF/exFAT/ReFS/ext2/ext3/ext4
+ * Create DOS bootable USB drives using [FreeDOS](https://www.freedos.org) or MS-DOS
+ * Create BIOS or UEFI bootable drives, including [UEFI bootable NTFS](https://github.com/pbatard/uefi-ntfs)
+ * Create bootable drives from bootable ISOs (Windows, Linux, etc.)
+@@ -29,7 +26,8 @@ Features
+ * Perform runtime validation of UEFI bootable media
+ * Improve Windows installation experience by automatically setting up OOBE parameters (local account, privacy options, etc.)
+ * Perform bad blocks checks, including detection of "fake" flash drives
+-* Download official Microsoft Windows 8, Windows 10 or Windows 11 retail ISOs
++* Download official Microsoft Windows 8.1, Windows 10 or Windows 11 retail ISOs
++* Runs on Windows 7 - 11
+ * Download [UEFI Shell](https://github.com/pbatard/UEFI-Shell) ISOs
+ * Modern and familiar UI, with [38 languages natively supported](https://github.com/pbatard/rufus/wiki/FAQ#What_languages_are_natively_supported_by_Rufus)
+ * Small footprint. No installation required.
+@@ -39,7 +37,7 @@ Features
+ Compilation
+ -----------
+ 
+-Use either Visual Studio 2022 or MinGW and then invoke the `.sln` or `configure`/`make` respectively.
++Use either Visual Studio 2019/2022 or MinGW and then invoke the `.sln` or `configure`/`make` respectively.
+ 
+ #### Visual Studio
+ 
+@@ -60,5 +58,5 @@ easily accessible log, or through the [Windows debug facility](https://docs.micr
+ Enhancements/Bugs
+ -----------------
+ 
+-Please use the [GitHub issue tracker](https://github.com/pbatard/rufus/issues)
++Please use the [GitHub Issue tracker](https://github.com/Alex313031/rufus-win7/issues)
+ for reporting problems or suggesting new features.
+diff --git a/configure b/configure
+index 667af6b2..7093728e 100755
+--- a/configure
++++ b/configure
+@@ -2,7 +2,7 @@
+ # Guess values for system-dependent variables and create Makefiles.
+ # Generated by GNU Autoconf 2.71 for rufus 4.6.
+ #
+-# Report bugs to <https://github.com/pbatard/rufus/issues>.
++# Report bugs to <https://github.com/Alex313031/rufus-win7/issues>.
+ #
+ #
+ # Copyright (C) 1992-1996, 1998-2017, 2020-2021 Free Software Foundation,
+@@ -268,10 +268,10 @@ then :
+     printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
+   else
+     printf "%s\n" "$0: Please tell bug-autoconf@gnu.org and
+-$0: https://github.com/pbatard/rufus/issues about your
+-$0: system, including any error possibly output before this
+-$0: message. Then install a modern shell, or manually run
+-$0: the script under such a shell if you do have one."
++$0: https://github.com/Alex313031/rufus-win7/issues about
++$0: your system, including any error possibly output before
++$0: this message. Then install a modern shell, or manually
++$0: run the script under such a shell if you do have one."
+   fi
+   exit 1
+ fi
+@@ -613,8 +613,8 @@ PACKAGE_NAME='rufus'
+ PACKAGE_TARNAME='rufus'
+ PACKAGE_VERSION='4.6'
+ PACKAGE_STRING='rufus 4.6'
+-PACKAGE_BUGREPORT='https://github.com/pbatard/rufus/issues'
+-PACKAGE_URL='https://rufus.ie'
++PACKAGE_BUGREPORT='https://github.com/Alex313031/rufus-win7/issues'
++PACKAGE_URL='https://github.com/Alex313031/rufus-win7#readme'
+ 
+ ac_unique_file="src/rufus.c"
+ ac_subst_vars='am__EXEEXT_FALSE
+@@ -1363,8 +1363,9 @@ Some influential environment variables:
+ Use these variables to override the choices made by `configure' or to help
+ it to find libraries and programs with nonstandard names/locations.
+ 
+-Report bugs to <https://github.com/pbatard/rufus/issues>.
+-rufus home page: <https://rufus.ie>.
++Report bugs to <https://github.com/Alex313031/rufus-win7/issues>.
++rufus home page: <https://github.com/Alex313031/rufus-win7#readme>.dnl
++
+ _ACEOF
+ ac_status=$?
+ fi
+@@ -5356,8 +5357,9 @@ Usage: $0 [OPTION]... [TAG]...
+ Configuration files:
+ $config_files
+ 
+-Report bugs to <https://github.com/pbatard/rufus/issues>.
+-rufus home page: <https://rufus.ie>."
++Report bugs to <https://github.com/Alex313031/rufus-win7/issues>.
++rufus home page: <https://github.com/Alex313031/rufus-win7#readme>.dnl
++"
+ 
+ _ACEOF
+ ac_cs_config=`printf "%s\n" "$ac_configure_args" | sed "$ac_safe_unquote"`
+diff --git a/configure.ac b/configure.ac
+index 513ab26d..82fc99cf 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1,4 +1,4 @@
+-AC_INIT([rufus], [4.6], [https://github.com/pbatard/rufus/issues], [rufus], [https://rufus.ie])
++AC_INIT([rufus], [4.6], [https://github.com/Alex313031/rufus-win7/issues], [rufus], [https://github.com/Alex313031/rufus-win7#readme])
+ AM_INIT_AUTOMAKE([-Wno-portability foreign no-dist no-dependencies])
+ AC_CONFIG_SRCDIR([src/rufus.c])
+ AC_CONFIG_MACRO_DIR([m4])
+diff --git a/res/loc/rufus.loc b/res/loc/rufus.loc
+index 63d590fd..2ac6aa61 100644
+--- a/res/loc/rufus.loc
++++ b/res/loc/rufus.loc
+@@ -379,7 +379,7 @@ t MSG_172 "Invalid download signature"
+ t MSG_173 "Click to select..."
+ t MSG_174 "Rufus - The Reliable USB Formatting Utility"
+ t MSG_175 "Version %d.%d (Build %d)"
+-t MSG_176 "mailto:support@akeo.ie"
++t MSG_176 "mailto:alex313031@gmail.com"
+ t MSG_177 "Report bugs or request enhancements at:"
+ t MSG_178 "Additional Copyrights:"
+ t MSG_179 "Update Policy:"
+diff --git a/res/rufus.ico b/res/rufus.ico
+index 7ea3c69a..02a07fed 100644
+Binary files a/res/rufus.ico and b/res/rufus.ico differ
+diff --git a/res/rufus.ini b/res/rufus.ini
+index 6e54ad39..1dcef4a7 100644
+--- a/res/rufus.ini
++++ b/res/rufus.ini
+@@ -12,9 +12,9 @@ CommCheck64 = 317570234
+ ;; Timestamp of the last update check
+ LastUpdateCheck = 13299289810
+ ;; Amount of time before Rufus checks for another update (in seconds)
+-UpdateCheckInterval = 86400
++UpdateCheckInterval = -1
+ ;; Whether the check for updates should also include new BETA releases
+-CheckForBetas = 1
++CheckForBetas = 0
+ ;; Use this to increase the log verbosity for the updates check (0-2)
+ ; VerboseUpdateCheck = 2
+ ;; If you are paranoid about apps writing to the registry, you can uncomment the
+@@ -25,7 +25,7 @@ CheckForBetas = 1
+ ;; Start with the Drive properties or Format options 'Advanced' panel displayed
+ ; ShowAdvancedDriveProperties = 1
+ ; ShowAdvancedFormatOptions = 1
+-;; Display extended information duringh USB enumeration (Alt-.)
++;; Display extended information during USB enumeration (Alt-.)
+ ; EnableUsbDebug = 1
+ ;; Don't perform a fake drive test during bad blocks check (Alt-B)
+ ; DisableFakeDrivesCheck = 1
+diff --git a/rufus.sln b/rufus.sln
+index dddbacce..dadbc42c 100644
+--- a/rufus.sln
++++ b/rufus.sln
+@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
+ # Visual Studio Version 16
+ VisualStudioVersion = 16.0.29215.179
+ MinimumVisualStudioVersion = 10.0.40219.1
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rufus", ".vs\rufus.vcxproj", "{731858A7-0303-4988-877B-9C0DD6471864}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rufus-win7", ".vs\rufus.vcxproj", "{731858A7-0303-4988-877B-9C0DD6471864}"
+ EndProject
+ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ms-sys", ".vs\ms-sys.vcxproj", "{2B1D078D-8EB4-4398-9CA4-23457265A7F6}"
+ EndProject
+diff --git a/src/dev.c b/src/dev.c
+index 5ea2b2a0..5d7a2384 100644
+--- a/src/dev.c
++++ b/src/dev.c
+@@ -103,22 +103,24 @@ static BOOL GetUSBProperties(char* parent_path, char* device_id, usb_device_prop
+ 		r = TRUE;
+ 	}
+ 
+-	// The USB speed report of modern Windows is a complete mess
+-	size = sizeof(conn_info_v2);
+-	memset(&conn_info_v2, 0, size);
+-	conn_info_v2.ConnectionIndex = (ULONG)props->port;
+-	conn_info_v2.Length = size;
+-	conn_info_v2.SupportedUsbProtocols.Usb300 = 1;
+-	if (!DeviceIoControl(handle, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, &conn_info_v2, size, &conn_info_v2, size, &size, NULL)) {
+-		uprintf("Could not get node connection information (V2) for device '%s': %s", device_id, WindowsErrorString());
+-	} else if (conn_info_v2.Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher) {
+-		props->speed = USB_SPEED_SUPER_PLUS;
+-	} else if (conn_info_v2.Flags.DeviceIsOperatingAtSuperSpeedOrHigher) {
+-		props->speed = USB_SPEED_SUPER;
+-	} else if (conn_info_v2.Flags.DeviceIsSuperSpeedPlusCapableOrHigher) {
+-		props->lower_speed = 2;
+-	} else if (conn_info_v2.Flags.DeviceIsSuperSpeedCapableOrHigher) {
+-		props->lower_speed = 1;
++	// In their great wisdom, Microsoft decided to BREAK the USB speed report between Windows 7 and Windows 8
++	if (WindowsVersion.Version >= WINDOWS_8) {
++		size = sizeof(conn_info_v2);
++		memset(&conn_info_v2, 0, size);
++		conn_info_v2.ConnectionIndex = (ULONG)props->port;
++		conn_info_v2.Length = size;
++		conn_info_v2.SupportedUsbProtocols.Usb300 = 1;
++		if (!DeviceIoControl(handle, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, &conn_info_v2, size, &conn_info_v2, size, &size, NULL)) {
++			uprintf("Could not get node connection information (V2) for device '%s': %s", device_id, WindowsErrorString());
++		} else if (conn_info_v2.Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher) {
++			props->speed = USB_SPEED_SUPER_PLUS;
++		} else if (conn_info_v2.Flags.DeviceIsOperatingAtSuperSpeedOrHigher) {
++			props->speed = USB_SPEED_SUPER;
++		} else if (conn_info_v2.Flags.DeviceIsSuperSpeedPlusCapableOrHigher) {
++			props->lower_speed = 2;
++		} else if (conn_info_v2.Flags.DeviceIsSuperSpeedCapableOrHigher) {
++			props->lower_speed = 1;
++		}
+ 	}
+ 
+ out:
+diff --git a/src/drive.c b/src/drive.c
+index 5f378e24..5d816b78 100644
+--- a/src/drive.c
++++ b/src/drive.c
+@@ -90,12 +90,13 @@ uint64_t persistence_size = 0;
+ BOOL SetAutoMount(BOOL enable)
+ {
+ 	HANDLE hMountMgr;
++	DWORD size;
+ 	BOOL ret = FALSE;
+ 
+ 	hMountMgr = CreateFileA(MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+ 	if (hMountMgr == INVALID_HANDLE_VALUE)
+ 		return FALSE;
+-	ret = DeviceIoControl(hMountMgr, IOCTL_MOUNTMGR_SET_AUTO_MOUNT, &enable, sizeof(enable), NULL, 0, NULL, NULL);
++	ret = DeviceIoControl(hMountMgr, IOCTL_MOUNTMGR_SET_AUTO_MOUNT, &enable, sizeof(enable), NULL, 0, &size, NULL);
+ 	CloseHandle(hMountMgr);
+ 	return ret;
+ }
+@@ -136,6 +137,7 @@ static HANDLE GetHandle(char* Path, BOOL bLockDrive, BOOL bWriteAccess, BOOL bWr
+ {
+ 	int i;
+ 	BYTE access_mask = 0;
++	DWORD size;
+ 	uint64_t EndTime;
+ 	HANDLE hDrive = INVALID_HANDLE_VALUE;
+ 	char DevPath[MAX_PATH];
+@@ -184,13 +186,13 @@ static HANDLE GetHandle(char* Path, BOOL bLockDrive, BOOL bWriteAccess, BOOL bWr
+ 	}
+ 
+ 	if (bLockDrive) {
+-		if (DeviceIoControl(hDrive, FSCTL_ALLOW_EXTENDED_DASD_IO, NULL, 0, NULL, 0, NULL, NULL)) {
++		if (DeviceIoControl(hDrive, FSCTL_ALLOW_EXTENDED_DASD_IO, NULL, 0, NULL, 0, &size, NULL)) {
+ 			uprintf("I/O boundary checks disabled");
+ 		}
+ 
+ 		EndTime = GetTickCount64() + DRIVE_ACCESS_TIMEOUT;
+ 		do {
+-			if (DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, NULL, NULL))
++			if (DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &size, NULL))
+ 				goto out;
+ 			if (IS_ERROR(ErrorStatus))	// User cancel
+ 				break;
+@@ -1312,7 +1314,7 @@ BOOL IsDriveLetterInUse(const char drive_letter)
+ BOOL GetDriveLabel(DWORD DriveIndex, char* letters, char** label, BOOL bSilent)
+ {
+ 	HANDLE hPhysical;
+-	DWORD error;
++	DWORD size, error;
+ 	static char VolumeLabel[MAX_PATH + 1] = { 0 };
+ 	char DrivePath[] = "#:\\", AutorunPath[] = "#:\\autorun.inf", *AutorunLabel = NULL;
+ 	WCHAR VolumeName[MAX_PATH + 1] = { 0 }, FileSystemName[64];
+@@ -1342,7 +1344,7 @@ BOOL GetDriveLabel(DWORD DriveIndex, char* letters, char** label, BOOL bSilent)
+ 	// In the case of card readers with no card, users can get an annoying popup asking them
+ 	// to insert media. Use IOCTL_STORAGE_CHECK_VERIFY to prevent this
+ 	hPhysical = GetPhysicalHandle(DriveIndex, FALSE, FALSE, TRUE);
+-	if (DeviceIoControl(hPhysical, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, NULL, 0, NULL, NULL))
++	if (DeviceIoControl(hPhysical, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, NULL, 0, &size, NULL))
+ 		AutorunLabel = get_token_data_file("label", AutorunPath);
+ 	else if (GetLastError() == ERROR_NOT_READY)
+ 		suprintf("Ignoring 'autorun.inf' label for drive %c: No media", toupper(letters[0]));
+@@ -1689,7 +1691,7 @@ BOOL ToggleEsp(DWORD DriveIndex, uint64_t PartitionOffset)
+ 	}
+ 
+ 	DriveLayout->PartitionEntry[esp_index].RewritePartition = TRUE;	// Just in case
+-	r = DeviceIoControl(hPhysical, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)DriveLayout, dl_size, NULL, 0, NULL, NULL);
++	r = DeviceIoControl(hPhysical, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)DriveLayout, dl_size, NULL, 0, &dl_size, NULL);
+ 	if (!r) {
+ 		uprintf("Could not set drive layout: %s", WindowsErrorString());
+ 		goto out;
+@@ -2058,7 +2060,8 @@ out:
+  */
+ BOOL UnmountVolume(HANDLE hDrive)
+ {
+-	if (!DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, NULL, NULL)) {
++	DWORD size;
++	if (!DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &size, NULL)) {
+ 		uprintf("Could not unmount drive: %s", WindowsErrorString());
+ 		return FALSE;
+ 	}
+@@ -2536,7 +2539,7 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
+ 
+ 	// If you don't call IOCTL_DISK_CREATE_DISK, the IOCTL_DISK_SET_DRIVE_LAYOUT_EX call will fail
+ 	size = sizeof(CreateDisk);
+-	if (!DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, size, NULL, 0, NULL, NULL)) {
++	if (!DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, size, NULL, 0, &size, NULL)) {
+ 		uprintf("Could not reset disk: %s", WindowsErrorString());
+ 		return FALSE;
+ 	}
+@@ -2548,7 +2551,7 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
+ 		((MAX_PARTITIONS - pi) * sizeof(PARTITION_INFORMATION_EX)) : 0);
+ 	// The DRIVE_LAYOUT_INFORMATION_EX used by Microsoft, with its 1-sized array, is designed to overrun...
+ 	// coverity[overrun-buffer-arg]
+-	if (!DeviceIoControl(hDrive, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)&DriveLayoutEx, size, NULL, 0, NULL, NULL)) {
++	if (!DeviceIoControl(hDrive, IOCTL_DISK_SET_DRIVE_LAYOUT_EX, (BYTE*)&DriveLayoutEx, size, NULL, 0, &size, NULL)) {
+ 		uprintf("Could not set drive layout: %s", WindowsErrorString());
+ 		return FALSE;
+ 	}
+@@ -2562,9 +2565,10 @@ BOOL CreatePartition(HANDLE hDrive, int partition_style, int file_system, BOOL m
+ BOOL RefreshDriveLayout(HANDLE hDrive)
+ {
+ 	BOOL r;
++	DWORD size;
+ 
+ 	// Diskpart does call the following IOCTL this after updating the partition table, so we do too
+-	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, NULL, NULL);
++	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, &size, NULL);
+ 	if (!r)
+ 		uprintf("Could not refresh drive layout: %s", WindowsErrorString());
+ 	return r;
+@@ -2574,17 +2578,19 @@ BOOL RefreshDriveLayout(HANDLE hDrive)
+ BOOL InitializeDisk(HANDLE hDrive)
+ {
+ 	BOOL r;
++	DWORD size;
+ 	CREATE_DISK CreateDisk = {PARTITION_STYLE_RAW, {{0}}};
+ 
+ 	uprintf("Initializing disk...");
+ 
+-	r = DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, sizeof(CreateDisk), NULL, 0, NULL, NULL);
++	size = sizeof(CreateDisk);
++	r = DeviceIoControl(hDrive, IOCTL_DISK_CREATE_DISK, (BYTE*)&CreateDisk, size, NULL, 0, &size, NULL);
+ 	if (!r) {
+ 		uprintf("Could not delete drive layout: %s", WindowsErrorString());
+ 		return FALSE;
+ 	}
+ 
+-	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, NULL, NULL);
++	r = DeviceIoControl(hDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, &size, NULL);
+ 	if (!r) {
+ 		uprintf("Could not refresh drive layout: %s", WindowsErrorString());
+ 		return FALSE;
+diff --git a/src/drive.h b/src/drive.h
+index 01e9c6b8..0a543660 100644
+--- a/src/drive.h
++++ b/src/drive.h
+@@ -348,7 +348,8 @@ typedef struct _DRIVE_LAYOUT_INFORMATION_EX4 {
+ } DRIVE_LAYOUT_INFORMATION_EX4, *PDRIVE_LAYOUT_INFORMATION_EX4;
+ 
+ static __inline BOOL UnlockDrive(HANDLE hDrive) {
+-	return DeviceIoControl(hDrive, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, NULL, NULL);
++	DWORD size;
++	return DeviceIoControl(hDrive, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &size, NULL);
+ }
+ #define safe_unlockclose(h) do {if ((h != INVALID_HANDLE_VALUE) && (h != NULL)) {UnlockDrive(h); CloseHandle(h); h = INVALID_HANDLE_VALUE;}} while(0)
+ 
+diff --git a/src/format.c b/src/format.c
+index fe5b2b69..51fdb647 100644
+--- a/src/format.c
++++ b/src/format.c
+@@ -771,7 +771,8 @@ static BOOL WriteMBR(HANDLE hPhysicalDrive)
+ {
+ 	BOOL r = FALSE;
+ 	BOOL needs_masquerading = HAS_WINPE(img_report) && (!img_report.uses_minint);
+-	uint8_t* buffer = NULL;
++	DWORD size;
++	unsigned char* buffer = NULL;
+ 	FAKE_FD fake_fd = { 0 };
+ 	FILE* fp = (FILE*)&fake_fd;
+ 	const char* using_msg = "Using %s MBR";
+@@ -790,7 +791,7 @@ static BOOL WriteMBR(HANDLE hPhysicalDrive)
+ 
+ 	// FormatEx rewrites the MBR and removes the LBA attribute of FAT16
+ 	// and FAT32 partitions - we need to correct this in the MBR
+-	buffer = (uint8_t*)_mm_malloc(SelectedDrive.SectorSize, 16);
++	buffer = (unsigned char*)_mm_malloc(SelectedDrive.SectorSize, 16);
+ 	if (buffer == NULL) {
+ 		uprintf("Could not allocate memory for MBR");
+ 		ErrorStatus = RUFUS_ERROR(ERROR_NOT_ENOUGH_MEMORY);
+@@ -896,7 +897,7 @@ windows_mbr:
+ 
+ notify:
+ 	// Tell the system we've updated the disk properties
+-	if (!DeviceIoControl(hPhysicalDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, NULL, NULL))
++	if (!DeviceIoControl(hPhysicalDrive, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, &size, NULL))
+ 		uprintf("Failed to notify system about disk properties update: %s", WindowsErrorString());
+ 
+ out:
+@@ -1380,7 +1381,6 @@ static BOOL WriteDrive(HANDLE hPhysicalDrive, BOOL bZeroDrive)
+ 				goto out;
+ 			}
+ 
+-
+ 			// 2. WriteFile fails unless the size is a multiple of sector size
+ 			if (read_size[read_bufnum] % SelectedDrive.SectorSize != 0) {
+ 				if_not_assert(HI_ALIGN_X_TO_Y(read_size[read_bufnum], SelectedDrive.SectorSize) <= buf_size)
+diff --git a/src/license.h b/src/license.h
+index 9a59e9f5..7f49bb25 100644
+--- a/src/license.h
++++ b/src/license.h
+@@ -28,7 +28,7 @@ RUFUS_URL "\\line\n"
+ "\\fs18%s\\line\n"
+ "\\line\n"
+ "%s\\line\n"
+-"https://github.com/pbatard/rufus/issues\\line\n"
++"https://github.com/Alex313031/rufus-win7/issues\\line\n"
+ "\\line\n"
+ "\\b\\fs19 %s\\b0}";
+ 
+diff --git a/src/net.c b/src/net.c
+index f5fc8215..de9608be 100644
+--- a/src/net.c
++++ b/src/net.c
+@@ -470,7 +470,7 @@ static DWORD WINAPI CheckForUpdatesThread(LPVOID param)
+ 		} while ((!force_update_check) && ((op_in_progress || (dialog_showing > 0))));
+ 		if (!force_update_check) {
+ 			if ((ReadSetting32(SETTING_UPDATE_INTERVAL) == -1)) {
+-				vuprintf("Check for updates disabled, as per settings.");
++				//vuprintf("Check for updates disabled, as per settings.");
+ 				goto out;
+ 			}
+ 			reg_time = ReadSetting64(SETTING_LAST_UPDATE);
+diff --git a/src/rufus.c b/src/rufus.c
+index b343c0c9..895336eb 100755
+--- a/src/rufus.c
++++ b/src/rufus.c
+@@ -31,6 +31,7 @@
+ #include <time.h>
+ #include <winioctl.h>
+ #include <shlobj.h>
++#include <psapi.h>
+ #include <process.h>
+ #include <dwmapi.h>
+ #include <dbt.h>
+@@ -2052,6 +2053,7 @@ static void InitDialog(HWND hDlg)
+ 			uprintf(timestamp);
+ 		}
+ 	}
++	uprintf("Welcome to the Reliable USB Formatting Utility!");
+ 	uprintf(APPLICATION_NAME " " APPLICATION_ARCH " v%d.%d.%d%s%s", rufus_version[0], rufus_version[1], rufus_version[2],
+ 		IsAlphaOrBeta(), (ini_file != NULL)?"(Portable)": (appstore_version ? "(AppStore version)" : ""));
+ 	// Display a notice if running x86 emulation on ARM
+@@ -2160,11 +2162,14 @@ static void InitDialog(HWND hDlg)
+ 	CreateTooltip(GetDlgItem(hDlg, IDC_PERSISTENCE_SIZE), lmprintf(MSG_125), 30000);
+ 	CreateTooltip(GetDlgItem(hDlg, IDC_PERSISTENCE_UNITS), lmprintf(MSG_126), 30000);
+ 
+-	if (!advanced_mode_device)	// Hide as needed, since we display the advanced controls by default
+-		ToggleAdvancedDeviceOptions(FALSE);
+-	if (!advanced_mode_format)
+-		ToggleAdvancedFormatOptions(FALSE);
++	// Display advanced controls by default
++	//if (!advanced_mode_device)	// Hide as needed, since we display the advanced controls by default
++		//ToggleAdvancedDeviceOptions(FALSE);
++	//if (!advanced_mode_format)
++		//ToggleAdvancedFormatOptions(FALSE);
+ 	ToggleImageOptions();
++	// Open Log Window by default
++	SendMessage(hMainDialog, WM_COMMAND, IDC_LOG, 0);
+ 
+ 	// Process commandline parameters
+ 	if (img_provided) {
+@@ -3611,19 +3616,19 @@ skip_args_processing:
+ 	GetWindowsVersion(&WindowsVersion);
+ 	// Force a version if specified as parameter, but without allowing folks running
+ 	// a version of Windows we no longer support to use the option as a bypass!
+-	if (WindowsVersion.Version > WINDOWS_7 && forced_windows_version != 0)
++	if (WindowsVersion.Version > WINDOWS_XP && forced_windows_version != 0)
+ 		WindowsVersion.Version = forced_windows_version;
+ 
+ 	// ...and nothing of value was lost
+-	if (WindowsVersion.Version <= WINDOWS_7) {
++	if (WindowsVersion.Version < WINDOWS_XP) {
+ 		// Load the translation before we print the error
+ 		get_loc_data_file(loc_file, selected_locale);
+ 		right_to_left_mode = ((selected_locale->ctrl_id) & LOC_RIGHT_TO_LEFT);
+ 		// Set MB_SYSTEMMODAL to prevent Far Manager from stealing focus...
+ 		MessageBoxExU(NULL,
+ 			lmprintf(MSG_294,
+-				(WindowsVersion.Version == WINDOWS_7) ? 3 : 2,
+-				(WindowsVersion.Version == WINDOWS_7) ? 22 : 18),
++				(WindowsVersion.Version == WINDOWS_XP) ? 3 : 2,
++				(WindowsVersion.Version == WINDOWS_XP) ? 22 : 18),
+ 			lmprintf(MSG_293), MB_ICONSTOP | MB_IS_RTL | MB_SYSTEMMODAL, selected_langid);
+ 		goto out;
+ 	}
+diff --git a/src/rufus.h b/src/rufus.h
+index 540a1bd7..c5408fd2 100644
+--- a/src/rufus.h
++++ b/src/rufus.h
+@@ -56,7 +56,7 @@
+ #else
+ #define APPLICATION_ARCH            "(Unknown Arch)"
+ #endif
+-#define COMPANY_NAME                "Akeo Consulting"
++#define COMPANY_NAME                "Alex313031"
+ #define STR_NO_LABEL                "NO_LABEL"
+ // Yes, there exist characters between these seemingly empty quotes!
+ #define LEFT_TO_RIGHT_MARK          "â€Ž"
+@@ -120,12 +120,12 @@
+ #define RSA_SIGNATURE_SIZE          256
+ #define CBN_SELCHANGE_INTERNAL      (CBN_SELCHANGE + 256)
+ #if defined(RUFUS_TEST)
+-#define RUFUS_URL                   "http://nas/~rufus"
+-#else
+ #define RUFUS_URL                   "https://rufus.ie"
++#else
++#define RUFUS_URL                   "https://github.com/Alex313031/rufus-win7"
+ #endif
+-#define DOWNLOAD_URL                RUFUS_URL "/downloads"
+-#define FILES_URL                   RUFUS_URL "/files"
++#define DOWNLOAD_URL                RUFUS_URL "/releases"
++#define FILES_URL                   "https://rufus.ie/files"
+ #define FILES_DIR                   APPLICATION_NAME
+ #define FIDO_VERSION                "z1"
+ #define WPPRECORDER_MORE_INFO_URL   "https://github.com/pbatard/rufus/wiki/FAQ#bsods-with-windows-to-go-drives-created-from-windows-10-1809-isos"
+@@ -135,7 +135,7 @@
+ #define DISKCOPY_SIZE               0x16ee00
+ #define DISKCOPY_IMAGE_OFFSET       0x66d8
+ #define DISKCOPY_IMAGE_SIZE         0x168000
+-#define SYMBOL_SERVER_USER_AGENT    "Microsoft-Symbol-Server/10.0.22621.755"
++#define SYMBOL_SERVER_USER_AGENT    "Microsoft-Symbol-Server/10.0.19041.685"
+ #define DEFAULT_ESP_MOUNT_POINT     "S:\\"
+ #define IS_POWER_OF_2(x)            ((x != 0) && (((x) & ((x) - 1)) == 0))
+ #define IGNORE_RETVAL(expr)         do { (void)(expr); } while(0)
+@@ -780,7 +780,7 @@ extern uint16_t GetSyslinuxVersion(char* buf, size_t buf_size, char** ext);
+ extern BOOL SetAutorun(const char* path);
+ extern char* FileDialog(BOOL save, char* path, const ext_t* ext, UINT* selected_ext);
+ extern BOOL FileIO(enum file_io_type io_type, char* path, char** buffer, DWORD* size);
+-extern uint8_t* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate);
++extern unsigned char* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate);
+ extern DWORD GetResourceSize(HMODULE module, char* name, char* type, const char* desc);
+ extern DWORD RunCommandWithProgress(const char* cmdline, const char* dir, BOOL log, int msg);
+ #define RunCommand(cmd, dir, log) RunCommandWithProgress(cmd, dir, log, 0)
+diff --git a/src/rufus.rc b/src/rufus.rc
+index 63419a76..1d356b8f 100644
+--- a/src/rufus.rc
++++ b/src/rufus.rc
+@@ -415,12 +415,12 @@ BEGIN
+     BEGIN
+         BLOCK "000004b0"
+         BEGIN
+-            VALUE "Comments", "https://rufus.ie"
+-            VALUE "CompanyName", "Akeo Consulting"
+-            VALUE "FileDescription", "Rufus"
++            VALUE "Comments", "https://github.com/Alex313031/rufus-win7"
++            VALUE "CompanyName", "Alex313031"
++            VALUE "FileDescription", "Rufus for Windows 7"
+             VALUE "FileVersion", "4.6.2208"
+             VALUE "InternalName", "Rufus"
+-            VALUE "LegalCopyright", "© 2011-2024 Pete Batard (GPL v3)"
++            VALUE "LegalCopyright", "© 2024 Alex313031 (GPL v3)"
+             VALUE "LegalTrademarks", "https://www.gnu.org/licenses/gpl-3.0.html"
+             VALUE "OriginalFilename", "rufus-4.6.exe"
+             VALUE "ProductName", "Rufus"
+diff --git a/src/stdfn.c b/src/stdfn.c
+index c299967b..c6b4ee7d 100644
+--- a/src/stdfn.c
++++ b/src/stdfn.c
+@@ -743,12 +743,12 @@ out:
+  * size is allocated for the resource. Else the buffer is allocated for
+  * the resource size.
+  */
+-uint8_t* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate)
++unsigned char* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate)
+ {
+ 	HGLOBAL res_handle;
+ 	HRSRC res;
+ 	DWORD res_len;
+-	uint8_t* p = NULL;
++	unsigned char* p = NULL;
+ 
+ 	res = FindResourceA(module, name, type);
+ 	if (res == NULL) {
+@@ -765,7 +765,7 @@ uint8_t* GetResource(HMODULE module, char* name, char* type, const char* desc, D
+ 	if (duplicate) {
+ 		if (*len == 0)
+ 			*len = res_len;
+-		p = calloc(*len, 1);
++		p = (unsigned char*)calloc(*len, 1);
+ 		if (p == NULL) {
+ 			uprintf("Could not allocate resource '%s'", desc);
+ 			goto out;
+@@ -774,7 +774,7 @@ uint8_t* GetResource(HMODULE module, char* name, char* type, const char* desc, D
+ 		if (res_len > *len)
+ 			uprintf("WARNING: Resource '%s' was truncated by %d bytes!", desc, res_len - *len);
+ 	} else {
+-		p = LockResource(res_handle);
++		p = (unsigned char*)LockResource(res_handle);
+ 	}
+ 	*len = res_len;
+ 
+diff --git a/src/stdlg.c b/src/stdlg.c
+index 0be69245..3760bdb4 100644
+--- a/src/stdlg.c
++++ b/src/stdlg.c
+@@ -386,7 +386,7 @@ INT_PTR CALLBACK AboutCallback(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
+ 		ResizeButtonHeight(hDlg, IDOK);
+ 		static_sprintf(about_blurb, about_blurb_format, lmprintf(MSG_174|MSG_RTF),
+ 			lmprintf(MSG_175|MSG_RTF, rufus_version[0], rufus_version[1], rufus_version[2]),
+-			"Copyright Â© 2011-2024 Pete Batard",
++			"Copyright Â© 2024 Alex313031",
+ 			lmprintf(MSG_176|MSG_RTF), lmprintf(MSG_177|MSG_RTF), lmprintf(MSG_178|MSG_RTF));
+ 		for (i = 0; i < ARRAYSIZE(hEdit); i++) {
+ 			hEdit[i] = GetDlgItem(hDlg, edit_id[i]);
+@@ -1445,6 +1445,12 @@ void SetFidoCheck(void)
+ 		return;
+ 	}
+ 
++	if (WindowsVersion.Version < WINDOWS_8) {
++		ubprintf("Notice: The ISO download feature has been deactivated because "
++			"your version of Windows is too old.");
++		return;
++	}
++
+ 	CreateThread(NULL, 0, CheckForFidoThread, NULL, 0, NULL);
+ }
+ 
+@@ -1453,46 +1459,21 @@ void SetFidoCheck(void)
+  */
+ BOOL SetUpdateCheck(void)
+ {
+-	BOOL enable_updates;
+ 	uint64_t commcheck = GetTickCount64();
+ 	char filename[MAX_PATH] = "", exename[] = APPLICATION_NAME ".exe";
+-	size_t fn_len, exe_len;
+ 
+ 	// Test if we can read and write settings. If not, forget it.
+ 	WriteSetting64(SETTING_COMM_CHECK, commcheck);
+-	if (ReadSetting64(SETTING_COMM_CHECK) != commcheck)
++	if (ReadSetting64(SETTING_COMM_CHECK) != commcheck) {
+ 		return FALSE;
+-
+-	// If the update interval is not set, this is the first time we run so prompt the user
+-	if (ReadSetting32(SETTING_UPDATE_INTERVAL) == 0) {
+-		notification_info more_info;
+-
+-		// Add a hack for people who'd prefer the app not to prompt about update settings on first run.
+-		// If the executable is called "rufus.exe", without version, we disable the prompt
+-		GetModuleFileNameU(NULL, filename, sizeof(filename));
+-		fn_len = safe_strlen(filename);
+-		exe_len = safe_strlen(exename);
+-#if !defined(_DEBUG)	// Don't allow disabling update prompt, unless it's a release
+-		if ((fn_len > exe_len) && (safe_stricmp(&filename[fn_len-exe_len], exename) == 0)) {
+-			uprintf("Short name used - Disabling initial update policy prompt\n");
+-			enable_updates = TRUE;
+-		} else {
+-#endif
+-			more_info.id = IDD_UPDATE_POLICY;
+-			more_info.callback = UpdateCallback;
+-			enable_updates = Notification(MSG_QUESTION, NULL, &more_info, lmprintf(MSG_004), lmprintf(MSG_005));
+-#if !defined(_DEBUG)
+-		}
+-#endif
+-		if (!enable_updates) {
+-			WriteSetting32(SETTING_UPDATE_INTERVAL, -1);
+-			return FALSE;
+-		}
+-		// If the user hasn't set the interval in the dialog, set to default
+-		if ( (ReadSetting32(SETTING_UPDATE_INTERVAL) == 0) ||
+-			 (ReadSetting32(SETTING_UPDATE_INTERVAL) == -1) )
+-			WriteSetting32(SETTING_UPDATE_INTERVAL, 86400);
+ 	}
++
++		WriteSetting32(SETTING_UPDATE_INTERVAL, -1);
++		WriteSetting32(SETTING_VERBOSE_UPDATES, 2);
++		WriteSetting32(SETTING_ADVANCED_MODE, 1);
++		WriteSetting32(SETTING_ADVANCED_MODE_FORMAT, 1);
++		WriteSetting32(SETTING_ADVANCED_MODE_DEVICE, 1);
++		return FALSE;
+ 	SetFidoCheck();
+ 	return TRUE;
+ }
+@@ -1835,6 +1816,7 @@ LPCDLGTEMPLATE GetDialogTemplate(int Dialog_ID)
+ 		memmove((void*)dst, (void*)src, size - (src - start));
+ 	} else {
+ 		uprintf("Could not locate font for %s!", get_name_from_id(Dialog_ID));
++		uprintf("Are you running on Windows 7+");
+ 	}
+ 	return rcTemplate;
+ }
+diff --git a/src/ui.c b/src/ui.c
+index e83c77a3..cb1a03b6 100644
+--- a/src/ui.c
++++ b/src/ui.c
+@@ -1022,8 +1022,8 @@ static INT_PTR CALLBACK ProgressCallback(HWND hCtrl, UINT message, WPARAM wParam
+ 
+ void CreateAdditionalControls(HWND hDlg)
+ {
+-	int buttons_list[] = { IDC_LANG, IDC_ABOUT, IDC_SETTINGS, IDC_LOG };
+-	int bitmaps_list[] = { 0, 1, 2, 3 };
++	int buttons_list[] = { IDC_ABOUT, IDC_LANG, IDC_LOG };
++	int bitmaps_list[] = { 1, 0, 3 };
+ 	HINSTANCE hDll;
+ 	HIMAGELIST hToolbarImageList;
+ 	HICON hIcon, hIconUp, hIconDown;
+diff --git a/src/winio.h b/src/winio.h
+index 794057bc..b802b8c3 100644
+--- a/src/winio.h
++++ b/src/winio.h
+@@ -19,7 +19,9 @@
+ */
+ 
+ #include <windows.h>
++#include <ioapiset.h>
+ #include "msapi_utf8.h"
++#include "rufus.h"
+ 
+ #pragma once
+ 
+@@ -124,11 +126,12 @@ static __inline BOOL WriteFileAsync(HANDLE h, LPVOID lpBuffer, DWORD nNumberOfBy
+ 	ASYNC_FD* fd = (ASYNC_FD*)h;
+ 	fd->Overlapped.bOffsetUpdated = FALSE;
+ 	if (!WriteFile(fd->hFile, lpBuffer, nNumberOfBytesToWrite, NULL,
+-		(OVERLAPPED*)&fd->Overlapped))
++		(OVERLAPPED*)&fd->Overlapped)) {
+ 		// TODO: Is it possible to get ERROR_HANDLE_EOF here?
+ 		fd->iStatus = (GetLastError() == ERROR_IO_PENDING) ? -1 : 0;
+-	else
++	} else {
+ 		fd->iStatus = 1;
++	}
+ 	return (fd->iStatus != 0);
+ }
+ 
+@@ -168,10 +171,12 @@ static __inline BOOL GetSizeAsync(HANDLE h, LPDWORD lpNumberOfBytes)
+ 		return FALSE;
+ 	}
+ 	fd->Overlapped.bOffsetUpdated = TRUE;
+-	if (!GetOverlappedResultEx(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
+-		lpNumberOfBytes, WRITE_TIMEOUT, (fd->iStatus < 0)))
+-		// When reading from VHD/VHDX we get SECTOR_NOT_FOUND rather than EOF for the end of the drive
+-		return (GetLastError() == ERROR_HANDLE_EOF || GetLastError() == ERROR_SECTOR_NOT_FOUND);
++	if (WindowsVersion.Version >= WINDOWS_XP) {
++		// No timeout call for Windows 7
++		if (!GetOverlappedResult(fd->hFile, (OVERLAPPED*)&fd->Overlapped,
++			lpNumberOfBytes, (fd->iStatus < 0)))
++			return (GetLastError() == ERROR_HANDLE_EOF);
++	}
+ 	fd->Overlapped.Offset += *lpNumberOfBytes;
+ 	return TRUE;
+ }

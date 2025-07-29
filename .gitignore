@@ -31,7 +31,6 @@
 *.opt
 *.org
 *.p7x
-*.patch
 *.pc
 *.pdb
 *.pdf
