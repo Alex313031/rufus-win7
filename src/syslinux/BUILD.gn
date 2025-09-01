@@ -1,0 +1,130 @@
+# ext2fs (Minimal ext2fs implementation)
+
+import("//build/config/precompiled_header.gni")
+import("//build/config/static_shared.gni")
+
+group("syslinux") {
+  public_deps = [
+    ":syslinux-libfat",
+    ":syslinux-libinstaller",
+    ":syslinux-win",
+  ]
+}
+
+# syslinux-libfat FAT library for syslinux
+static_library("syslinux-libfat") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":syslinux_libfat_config" ]
+
+  sources = [
+    "libfat/fat.h",
+    "libfat/libfat.h",
+    "libfat/libfatint.h",
+    "libfat/ulint.h",
+  ]
+
+  sources += [
+    "libfat/cache.c",
+    "libfat/dumpdir.c",
+    "libfat/fatchain.c",
+    "libfat/open.c",
+    "libfat/searchdir.c",
+  ]
+
+  #public_deps = []
+}
+
+config("syslinux_libfat_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "inline=__inline",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}
+
+# syslinux-libinstaller installer library for syslinux
+static_library("syslinux-libinstaller") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":syslinux_libinstaller_config" ]
+
+  sources = [
+    "libinstaller/advconst.h",
+    "libinstaller/syslinux.h",
+    "libinstaller/syslxcom.h",
+    "libinstaller/syslxfs.h",
+    "libinstaller/syslxint.h",
+  ]
+
+  sources += [
+    "libinstaller/fs.c",
+    "libinstaller/setadv.c",
+    "libinstaller/syslxmod.c",
+  ]
+
+  public_deps = [ ":syslinux-libfat", ]
+}
+
+config("syslinux_libinstaller_config") {
+  configs = []
+
+  cflags = [ "-Wno-address-of-packed-member", ]
+
+  include_dirs = [
+    "./",
+    "../",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "inline=__inline",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}
+
+# syslinux-win win32 specifics for syslinux
+static_library("syslinux-win") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":syslinux_win_config" ]
+
+  sources = [
+   "win/ntfssect.h",
+  ]
+
+  sources += [
+    "win/ntfssect.c",
+  ]
+
+  public_deps = [ ":syslinux-libfat", ]
+}
+
+config("syslinux_win_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "inline=__inline",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}

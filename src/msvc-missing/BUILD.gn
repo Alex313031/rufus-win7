@@ -1,0 +1,21 @@
+# unistd.h (POSIX unistd.h implementation for Win32)
+
+import("//build/config/static_shared.gni")
+
+source_set("msvc-missing") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":unistd_config" ]
+
+  sources = [ "unistd.h", ]
+}
+
+config("unistd_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+  ]
+}

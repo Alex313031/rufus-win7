@@ -38,18 +38,23 @@ executable("rufus") {
   sources = [
   ]
 
+  deps = [
+    "libcdio:libcdio-driver",
+    "libcdio:libcdio-iso9960",
+    "libcdio:libcdio-udf",
+    "syslinux:syslinux-libfat",
+    "syslinux:syslinux-libinstaller",
+    "syslinux:syslinux-win",
+  ]
+
   public_deps = [
     "bled:bled",
     "ext2fs:ext2fs",
     "getopt:getopt",
-    "libcdio:libcdio-driver",
-    "libcdio:libcdio-iso9960",
-    "libcdio:libcdio-udf",
-    #"msvc-missing:msvc-missing",
+    "libcdio:libcdio",
+    "msvc-missing:msvc-missing",
     "ms-sys:ms-sys",
-    #"syslinux:syslinux-libfat",
-    #"syslinux:syslinux-libinstaller",
-    #"syslinux:syslinux-win",
+    "syslinux:syslinux",
     #"wimlib:wimlib",
   ]
 }
@@ -60,11 +65,17 @@ group("rufus_libs") {
     "bled:bled",
     "ext2fs:ext2fs",
     "getopt:getopt",
+    "libcdio:libcdio",
     "libcdio:libcdio-driver",
     "libcdio:libcdio-iso9960",
     "libcdio:libcdio-udf",
-    #"msvc-missing:msvc-missing",
+    "msvc-missing:msvc-missing",
     "ms-sys:ms-sys",
+    "syslinux:syslinux",
+    "syslinux:syslinux-libfat",
+    "syslinux:syslinux-libinstaller",
+    "syslinux:syslinux-win",
+    #"wimlib:wimlib",
   ]
 }
 
