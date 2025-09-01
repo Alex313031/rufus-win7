@@ -1,0 +1,177 @@
+# libcdio (Minimal ext2fs implementation)
+
+import("//build/config/precompiled_header.gni")
+import("//build/config/static_shared.gni")
+
+group("libcdio_all") {
+}
+
+# libcdio-driver
+static_library("libcdio-driver") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":libcdio_driver_config" ]
+
+  sources = [
+    "cdio.h",
+    "cdio/ds.h",
+    "cdio/logging.h",
+    "cdio/memory.h",
+    "cdio/sector.h",
+    "cdio/types.h",
+    "cdio/util.h",
+    "cdio/version.h",
+    "config.h",
+    "driver/cdio_assert.h",
+    "driver/cdio_private.h",
+    "driver/filemode.h",
+    "driver/portable.h",
+    "driver/_cdio_stdio.h",
+    "driver/_cdio_stream.h",
+  ]
+
+  sources += [
+    "driver/disc.c",
+    "driver/ds.c",
+    "driver/logging.c",
+    "driver/memory.c",
+    "driver/read.c",
+    "driver/sector.c",
+    "driver/track.c",
+    "driver/utf8.c",
+    "driver/util.c",
+    "driver/_cdio_stdio.c",
+    "driver/_cdio_stream.c",
+  ]
+
+  #public_deps = []
+}
+
+config("libcdio_driver_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "HAVE_CONFIG_H",
+    "_OFF_T_DEFINED",
+    "_off_t=__int64",
+    "off_t=_off_t",
+    "_FILE_OFFSET_BITS=64",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}
+
+# libcdio-iso9960
+static_library("libcdio-iso9960") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":libcdio_iso9960_config" ]
+
+  sources = [
+    "cdio\bytesex.h",
+    "cdio\cdio.h",
+    "cdio\cdtext.h",
+    "cdio\iso9660.h",
+    "cdio\logging.h",
+    "cdio\portable.h",
+    "cdio\rock.h",
+    "cdio\utf8.h",
+    "cdio\util.h",
+    "config.h",
+    "driver\cdio_assert.h",
+    "driver\cdio_private.h",
+    "driver\filemode.h",
+    "driver\_cdio_stdio.h",
+    "iso9660\iso9660_private.h",
+  ]
+
+  sources += [
+    "iso9660\iso9660.c",
+    "iso9660\iso9660_fs.c",
+    "iso9660\rock.c",
+    "iso9660\xa.c",
+  ]
+
+  public_deps = [ ":libcdio-driver", ]
+}
+
+config("libcdio_iso9960_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+    "./driver",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "HAVE_CONFIG_H",
+    "_OFF_T_DEFINED",
+    "_off_t=__int64",
+    "off_t=_off_t",
+    "_FILE_OFFSET_BITS=64",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}
+
+# libcdio-udf
+static_library("libcdio-udf") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":libcdio_udf_config" ]
+
+  sources = [
+    "cdio\bytesex.h",
+    "cdio\udf.h",
+    "config.h",
+    "driver\cdio_assert.h",
+    "driver\filemode.h",
+    "udf\udf_fs.h",
+    "udf\udf_private.h",
+  ]
+
+  sources += [
+    "udf\filemode.c",
+    "udf\udf.c",
+    "udf\udf_file.c",
+    "udf\udf_fs.c",
+    "udf\udf_time.c",
+  ]
+
+  public_deps = [ ":libcdio-driver", ]
+}
+
+config("libcdio_udf_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+    "./driver",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "HAVE_CONFIG_H",
+    "_OFF_T_DEFINED",
+    "_off_t=__int64",
+    "off_t=_off_t",
+    "_FILE_OFFSET_BITS=64",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}

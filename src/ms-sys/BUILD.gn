@@ -1,0 +1,94 @@
+# ms-sys (Independent implementations of Miscrosoft-specific filesystem stuff)
+
+import("//build/config/precompiled_header.gni")
+import("//build/config/static_shared.gni")
+
+# FAT12/16/32/NTFS/MBR info library
+static_library("ms-sys") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":ms_sys_config" ]
+
+  sources = [
+    "inc\br.h",
+    "inc\br_fat12_0x0.h",
+    "inc\br_fat12_0x3e.h",
+    "inc\br_fat16fd_0x3e.h",
+    "inc\br_fat16ros_0x0.h",
+    "inc\br_fat16ros_0x3e.h",
+    "inc\br_fat16_0x0.h",
+    "inc\br_fat16_0x3e.h",
+    "inc\br_fat32fd_0x3f0.h",
+    "inc\br_fat32fd_0x52.h",
+    "inc\br_fat32kos_0x52.h",
+    "inc\br_fat32nt_0x1800.h",
+    "inc\br_fat32nt_0x3f0.h",
+    "inc\br_fat32nt_0x52.h",
+    "inc\br_fat32pe_0x1800.h",
+    "inc\br_fat32pe_0x3f0.h",
+    "inc\br_fat32pe_0x52.h",
+    "inc\br_fat32ros_0x1c00.h",
+    "inc\br_fat32ros_0x3f0.h",
+    "inc\br_fat32ros_0x52.h",
+    "inc\br_fat32_0x0.h",
+    "inc\br_fat32_0x3f0.h",
+    "inc\br_fat32_0x52.h",
+    "inc\br_ntfs_0x0.h",
+    "inc\br_ntfs_0x54.h",
+    "inc\fat12.h",
+    "inc\fat16.h",
+    "inc\fat32.h",
+    "inc\file.h",
+    "inc\label_11_char.h",
+    "inc\libintl.h",
+    "inc\mbr_2000.h",
+    "inc\mbr_95b.h",
+    "inc\mbr_dos.h",
+    "inc\mbr_dos_f2.h",
+    "inc\mbr_gpt_syslinux.h",
+    "inc\mbr_grub.h",
+    "inc\mbr_grub2.h",
+    "inc\mbr_kolibri.h",
+    "inc\mbr_msg_rufus.h",
+    "inc\mbr_reactos.h",
+    "inc\mbr_rufus.h",
+    "inc\mbr_syslinux.h",
+    "inc\mbr_vista.h",
+    "inc\mbr_win7.h",
+    "inc\mbr_zero.h",
+    "inc\nls.h",
+    "inc\ntfs.h",
+    "inc\partition_info.h",
+  ]
+
+  sources += [
+    "br.c",
+    "fat12.c",
+    "fat16.c",
+    "fat32.c",
+    "file.c",
+    "ntfs.c",
+    "partition_info.c",
+  ]
+
+  public_deps = [ "../getopt:getopt", ]
+}
+
+config("ms_sys_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+    "./inc",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    #"_CRT_NONSTDC_NO_DEPRECATE",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+}

@@ -41,12 +41,12 @@ executable("rufus") {
   public_deps = [
     "bled:bled",
     "ext2fs:ext2fs",
-    #"getopt:getopt",
-    #"libcdio:libcdio-driver",
-    #"libcdio:libcdio-iso9960",
-    #"libcdio:libcdio-udf",
+    "getopt:getopt",
+    "libcdio:libcdio-driver",
+    "libcdio:libcdio-iso9960",
+    "libcdio:libcdio-udf",
     #"msvc-missing:msvc-missing",
-    #"ms-sys:ms-sys",
+    "ms-sys:ms-sys",
     #"syslinux:syslinux-libfat",
     #"syslinux:syslinux-libinstaller",
     #"syslinux:syslinux-win",
@@ -60,6 +60,11 @@ group("rufus_libs") {
     "bled:bled",
     "ext2fs:ext2fs",
     "getopt:getopt",
+    "libcdio:libcdio-driver",
+    "libcdio:libcdio-iso9960",
+    "libcdio:libcdio-udf",
+    #"msvc-missing:msvc-missing",
+    "ms-sys:ms-sys",
   ]
 }
 
