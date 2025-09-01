@@ -28,6 +28,7 @@ config("getopt_config") {
   ]
 
   include_dirs = [
+    "./",
     "../",
   ]
 

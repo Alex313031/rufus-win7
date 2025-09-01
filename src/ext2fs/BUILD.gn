@@ -101,6 +101,7 @@ config("ext2fs_config") {
   ]
 
   include_dirs = [
+    "./",
     "../",
     "../msvc-missing",
   ]
