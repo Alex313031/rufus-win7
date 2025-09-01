@@ -3,7 +3,12 @@
 import("//build/config/precompiled_header.gni")
 import("//build/config/static_shared.gni")
 
-group("libcdio_all") {
+group("libcdio") {
+  public_deps = [
+    ":libcdio-driver",
+    ":libcdio-iso9960",
+    ":libcdio-udf",
+  ]
 }
 
 # libcdio-driver
@@ -42,8 +47,6 @@ static_library("libcdio-driver") {
     "driver/_cdio_stdio.c",
     "driver/_cdio_stream.c",
   ]
-
-  #public_deps = []
 }
 
 config("libcdio_driver_config") {
