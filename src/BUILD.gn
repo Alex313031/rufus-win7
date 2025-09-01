@@ -59,6 +59,7 @@ group("rufus_libs") {
   public_deps = [
     "bled:bled",
     "ext2fs:ext2fs",
+    "getopt:getopt",
   ]
 }
 
