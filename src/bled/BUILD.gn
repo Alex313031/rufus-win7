@@ -2,7 +2,6 @@
 
 import("//build/config/precompiled_header.gni")
 import("//build/config/static_shared.gni")
-import("//build/config/win/manifest.gni")
 
 # Library for rufus
 static_library("bled") {
@@ -77,8 +76,6 @@ static_library("bled") {
     "zstd_error_private.c",
   ]
 
-  #deps = [ ":libpicalc_sources" ]
-
   #public_deps = []
 }
 
@@ -101,6 +98,9 @@ config("bled_config") {
     "off_t=_off_t",
     "_FILE_OFFSET_BITS=64",
   ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
 
   libs = [
     "odbc32.lib",
