@@ -1,0 +1,120 @@
+# ext2fs (Minimal ext2fs implementation)
+
+import("//build/config/precompiled_header.gni")
+import("//build/config/static_shared.gni")
+
+# ext 2/3/4 library for rufus
+static_library("ext2fs") {
+  configs -= [ "//build/config/win:nominmax", ]
+  configs += [ ":ext2fs_config" ]
+
+  sources = [
+    "bitops.h",
+    "bmap64.h",
+    "com_err.h",
+    "config.h",
+    "crc16.h",
+    "crc32c_defs.h",
+    "crc32c_table.h",
+    "e2image.h",
+    "ext2fs.h",
+    "ext2fsP.h",
+    "ext2_err.h",
+    "ext2_ext_attr.h",
+    "ext2_fs.h",
+    "ext2_io.h",
+    "ext2_types.h",
+    "ext3_extents.h",
+    "ext4_acl.h",
+    "hashmap.h",
+    "jfs_compat.h",
+    "kernel-jbd.h",
+    "kernel-list.h",
+    "rbtree.h",
+  ]
+
+  sources += [
+    "alloc.c",
+    "alloc_sb.c",
+    "alloc_stats.c",
+    "alloc_tables.c",
+    "badblocks.c",
+    "bb_inode.c",
+    "bitmaps.c",
+    "bitops.c",
+    "blkmap64_ba.c",
+    "blkmap64_rb.c",
+    "blknum.c",
+    "block.c",
+    "bmap.c",
+    "closefs.c",
+    "crc16.c",
+    "crc32c.c",
+    "csum.c",
+    "dirblock.c",
+    "dirhash.c",
+    "dir_iterate.c",
+    "extent.c",
+    "ext_attr.c",
+    "fallocate.c",
+    "fileio.c",
+    "freefs.c",
+    "gen_bitmap.c",
+    "gen_bitmap64.c",
+    "get_num_dirs.c",
+    "hashmap.c",
+    "ind_block.c",
+    "initialize.c",
+    "inline.c",
+    "inline_data.c",
+    "inode.c",
+    "io_manager.c",
+    "i_block.c",
+    "link.c",
+    "lookup.c",
+    "mkdir.c",
+    "mkjournal.c",
+    "mmp.c",
+    "namei.c",
+    "newdir.c",
+    "nt_io.c",
+    "openfs.c",
+    "punch.c",
+    "rbtree.c",
+    "read_bb.c",
+    "rw_bitmaps.c",
+    "sha512.c",
+    "symlink.c",
+  ]
+
+  #public_deps = []
+}
+
+config("ext2fs_config") {
+  configs = []
+
+  cflags = [
+  ]
+  cflags += [
+    "-Wno-implicit-function-declaration",
+  ]
+
+  include_dirs = [
+    "../",
+    "../msvc-missing",
+  ]
+
+  defines = [
+    "_CRT_NONSTDC_NO_DEPRECATE",
+    "_CRT_SECURE_NO_WARNINGS",
+    "OMIT_COM_ERR",
+  ]
+  if (is_debug) {
+    defines += [ "_CRTDBG_MAP_ALLOC", ]
+  }
+
+  libs = [
+    "odbc32.lib",
+    "odbccp32.lib",
+  ]
+}
