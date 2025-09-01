@@ -1,0 +1,18 @@
+# Rufus (The Reliable USB Formatting Utility)
+# Rufus is a utility that helps format and create bootable USB flash drives.
+# This is a fork that still retains support for Windows 7 SP1+
+
+# Port of Rufus from make/MSVC to GN/Ninja/LLVM
+# Include all dependents in here
+group("rufus_all") {
+  public_deps = [
+    "src:rufus_exe",
+  ]
+}
+
+group("rufus_test") {
+  testonly = true
+  public_deps = [
+    "src:rufus_tests",
+  ]
+}

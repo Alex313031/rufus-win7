@@ -1,0 +1,84 @@
+# Rufus binary, supporting libs, and tests
+# https://github.com/pbatard/rufus
+# Port of Rufus from make/MSVC to GN/Ninja/LLVM
+
+import("//build/config/precompiled_header.gni")
+import("//build/config/static_shared.gni")
+import("//build/config/win/manifest.gni")
+
+# Builds all that's needed to make a release
+group("rufus_exe") {
+  public_deps = [
+    ":rufus",
+    ":rufus_libs",
+  ]
+}
+
+# Runtime and compile tests
+group("rufus_tests") {
+  testonly = true
+  public_deps = [
+    ":rufus_libs",
+  ]
+}
+
+# Main rufus app
+executable("rufus") {
+  configs -= [
+    "//build/config/win:console",
+    "//build/config/win:nominmax",
+  ]
+
+  configs += [
+    "//build/config/win:windowed",
+    #":precompiled",
+    ":rufus_config",
+  ]
+
+  sources = [
+  ]
+
+  public_deps = [
+    "bled:bled",
+    #"ext2fs:ext2fs",
+    #"getopt:getopt",
+    #"libcdio:libcdio-driver",
+    #"libcdio:libcdio-iso9960",
+    #"libcdio:libcdio-udf",
+    #"msvc-missing:msvc-missing",
+    #"ms-sys:ms-sys",
+    #"syslinux:syslinux-libfat",
+    #"syslinux:syslinux-libinstaller",
+    #"syslinux:syslinux-win",
+    #"wimlib:wimlib",
+  ]
+}
+
+# Rufus supporting libraries as a standalone target
+group("rufus_libs") {
+  public_deps = [
+    "bled:bled",
+  ]
+}
+
+# Rufus specific configs
+config("rufus_config") {
+  configs = []
+  # Must explicitly set this for sources
+  configs += [ "//build/config/win:windowed", ]
+}
+
+# Precompiled header for common C/C++ stdlib stuff
+precompiled_header("precompiled") {
+  precompiled_header = "stdafx.h"
+  precompiled_source = "stdafx.cc"
+}
+
+# Add language manifests to end of list
+windows_manifest("rufus_manifest") {
+  sources = [ as_invoker_manifest ]
+
+  if (use_common_controls) {
+    sources += [ common_controls_manifest, ]
+  }
+}
