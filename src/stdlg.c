@@ -394,7 +394,7 @@ INT_PTR CALLBACK AboutCallback(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		ResizeButtonHeight(hDlg, IDOK);
 		static_sprintf(about_blurb, about_blurb_format, lmprintf(MSG_174|MSG_RTF),
 			lmprintf(MSG_175|MSG_RTF, rufus_version[0], rufus_version[1], rufus_version[2]),
-			"Copyright © 2011-2025 Pete Batard",
+			"Copyright © 2025 Alex313031",
 			lmprintf(MSG_176|MSG_RTF), lmprintf(MSG_177|MSG_RTF), lmprintf(MSG_178|MSG_RTF));
 		for (i = 0; i < ARRAYSIZE(hEdit); i++) {
 			hEdit[i] = GetDlgItem(hDlg, edit_id[i]);
@@ -1602,6 +1602,12 @@ void SetFidoCheck(void)
 		return;
 	}
 
+	if (WindowsVersion.Version < WINDOWS_8) {
+		ubprintf("Notice: The ISO download feature has been deactivated because "
+			"your version of Windows is too old.");
+		return;
+	}
+
 	CreateThread(NULL, 0, CheckForFidoThread, NULL, 0, NULL);
 }
 
@@ -1610,46 +1616,22 @@ void SetFidoCheck(void)
  */
 BOOL SetUpdateCheck(void)
 {
-	BOOL enable_updates;
+	//BOOL enable_updates;
 	uint64_t commcheck = GetTickCount64();
 	char filename[MAX_PATH] = "", exename[] = APPLICATION_NAME ".exe";
-	size_t fn_len, exe_len;
+	//size_t fn_len, exe_len;
 
 	// Test if we can read and write settings. If not, forget it.
 	WriteSetting64(SETTING_COMM_CHECK, commcheck);
-	if (ReadSetting64(SETTING_COMM_CHECK) != commcheck)
+	if (ReadSetting64(SETTING_COMM_CHECK) != commcheck) {
 		return FALSE;
-
-	// If the update interval is not set, this is the first time we run so prompt the user
-	if (ReadSetting32(SETTING_UPDATE_INTERVAL) == 0) {
-		notification_info more_info;
-
-		// Add a hack for people who'd prefer the app not to prompt about update settings on first run.
-		// If the executable is called "rufus.exe", without version, we disable the prompt
-		GetModuleFileNameU(NULL, filename, sizeof(filename));
-		fn_len = safe_strlen(filename);
-		exe_len = safe_strlen(exename);
-#if !defined(_DEBUG)	// Don't allow disabling update prompt, unless it's a release
-		if ((fn_len > exe_len) && (safe_stricmp(&filename[fn_len-exe_len], exename) == 0)) {
-			uprintf("Short name used - Disabling initial update policy prompt\n");
-			enable_updates = TRUE;
-		} else {
-#endif
-			more_info.id = IDD_UPDATE_POLICY;
-			more_info.callback = UpdateCallback;
-			enable_updates = (NotificationEx(MB_ICONQUESTION | MB_YESNO, NULL, &more_info, lmprintf(MSG_004), lmprintf(MSG_005)) == IDYES);
-#if !defined(_DEBUG)
-		}
-#endif
-		if (!enable_updates) {
-			WriteSetting32(SETTING_UPDATE_INTERVAL, -1);
-			return FALSE;
-		}
-		// If the user hasn't set the interval in the dialog, set to default
-		if ( (ReadSetting32(SETTING_UPDATE_INTERVAL) == 0) ||
-			 (ReadSetting32(SETTING_UPDATE_INTERVAL) == -1) )
-			WriteSetting32(SETTING_UPDATE_INTERVAL, 86400);
 	}
+	WriteSetting32(SETTING_UPDATE_INTERVAL, -1);
+	WriteSetting32(SETTING_VERBOSE_UPDATES, 2);
+	WriteSetting32(SETTING_ADVANCED_MODE, 1);
+	WriteSetting32(SETTING_ADVANCED_MODE_FORMAT, 1);
+	WriteSetting32(SETTING_ADVANCED_MODE_DEVICE, 1);
+	return FALSE;
 	SetFidoCheck();
 	return TRUE;
 }
@@ -2032,6 +2014,7 @@ LPCDLGTEMPLATE GetDialogTemplate(int Dialog_ID)
 		memmove((void*)dst, (void*)src, size - (src - start));
 	} else {
 		uprintf("Could not locate font for %s!", get_name_from_id(Dialog_ID));
+    uprintf("Are you running on Windows 7+ ?");
 	}
 	return rcTemplate;
 }

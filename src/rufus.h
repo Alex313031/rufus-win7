@@ -56,7 +56,7 @@
 #else
 #define APPLICATION_ARCH            "(Unknown Arch)"
 #endif
-#define COMPANY_NAME                "Akeo Consulting"
+#define COMPANY_NAME                "Alex313031"
 #define STR_NO_LABEL                "NO_LABEL"
 #define LEFT_TO_RIGHT_MARK          "\u200e"
 #define RIGHT_TO_LEFT_MARK          "\u200f"
@@ -120,12 +120,12 @@
 #define RSA_SIGNATURE_SIZE          256
 #define CBN_SELCHANGE_INTERNAL      (CBN_SELCHANGE + 256)
 #if defined(RUFUS_TEST)
-#define RUFUS_URL                   "http://nas/~rufus"
-#else
 #define RUFUS_URL                   "https://rufus.ie"
+#else
+#define RUFUS_URL                   "https://github.com/Alex313031/rufus-win7"
 #endif
-#define DOWNLOAD_URL                RUFUS_URL "/downloads"
-#define FILES_URL                   RUFUS_URL "/files"
+#define DOWNLOAD_URL                RUFUS_URL "/releases"
+#define FILES_URL                   "https://rufus.ie/files"
 #define FILES_DIR                   APPLICATION_NAME
 #define FIDO_VERSION                "z1"
 #define WPPRECORDER_MORE_INFO_URL   "https://github.com/pbatard/rufus/wiki/FAQ#bsods-with-windows-to-go-drives-created-from-windows-10-1809-isos"
@@ -144,7 +144,7 @@
 #elif defined(_M_ARM)
 #define OSCDIMG_URL                 "https://msdl.microsoft.com/download/symbols/oscdimg.exe/9CD825745F000/oscdimg.exe"
 #endif
-#define SYMBOL_SERVER_USER_AGENT    "Microsoft-Symbol-Server/10.0.22621.755"
+#define SYMBOL_SERVER_USER_AGENT    "Microsoft-Symbol-Server/10.0.19041.685"
 #define DEFAULT_ESP_MOUNT_POINT     "S:\\"
 #define IS_POWER_OF_2(x)            ((x != 0) && (((x) & ((x) - 1)) == 0))
 #define IGNORE_RETVAL(expr)         do { (void)(expr); } while(0)
@@ -819,7 +819,7 @@ extern uint16_t GetSyslinuxVersion(char* buf, size_t buf_size, char** ext);
 extern BOOL SetAutorun(const char* path);
 extern char* FileDialog(BOOL save, char* path, const ext_t* ext, UINT* selected_ext);
 extern BOOL FileIO(enum file_io_type io_type, char* path, char** buffer, DWORD* size);
-extern uint8_t* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate);
+extern unsigned char* GetResource(HMODULE module, char* name, char* type, const char* desc, DWORD* len, BOOL duplicate);
 extern DWORD GetResourceSize(HMODULE module, char* name, char* type, const char* desc);
 extern DWORD RunCommandWithProgress(const char* cmdline, const char* dir, BOOL log, int msg, const char* pattern);
 #define RunCommand(cmd, dir, log) RunCommandWithProgress(cmd, dir, log, 0, NULL)
