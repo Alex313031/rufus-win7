@@ -40,7 +40,12 @@
 #include "msapi_utf8.h"
 #include "localization.h"
 #include "bled/bled.h"
+
+#if defined(__clang__)
+#include "../res/dbx/dbx_info.h"
+#else
 #include "dbx/dbx_info.h"
+#endif // defined(__clang__)
 
 #include "settings.h"
 

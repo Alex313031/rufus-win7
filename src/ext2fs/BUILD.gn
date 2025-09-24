@@ -85,6 +85,7 @@ static_library("ext2fs") {
     "rw_bitmaps.c",
     "sha512.c",
     "symlink.c",
+    "valid_blk.c",
   ]
 
   #public_deps = []

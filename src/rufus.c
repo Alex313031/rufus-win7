@@ -3459,6 +3459,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		goto skip_args_processing;
 	}
 
+  // Initialize common controls
+  InitCommonControls();
+
 	// We have to process the arguments before we acquire the lock and process the locale
 	PF_INIT(__wgetmainargs, Msvcrt);
 	if (pf__wgetmainargs != NULL) {

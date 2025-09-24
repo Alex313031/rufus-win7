@@ -36,25 +36,96 @@ executable("rufus") {
   ]
 
   sources = [
+    #"../res/dbx/dbx_info.h",
+    "../res/grub2/grub2_version.h",
+    "../res/grub/grub_version.h",
+    "badblocks.h",
+    "bled/bled.h",
+    "cregex.h",
+    "darkmode.h",
+    "drive.h",
+    "efi.h",
+    "format.h",
+    "gpt_types.h",
+    "hdd_vs_ufd.h",
+    "mbr_types.h",
+    "missing.h",
+    "msvc-missing/unistd.h",
+    "ntdll.h",
+    "settings.h",
+    "libcdio/cdio/cdio.h",
+    "libcdio/cdio/iso9660.h",
+    "libcdio/cdio/udf.h",
+    "localization.h",
+    "localization_data.h",
+    "msapi_utf8.h",
+    "dos.h",
+    "registry.h",
+    "resource.h",
+    "rufus.h",
+    "license.h",
+    "db.h",
+    "smart.h",
+    "dev.h",
+    "ui.h",
+    "ui_data.h",
+    "vhd.h",
+    "winio.h",
+    "wue.h",
+    "xml.h",
+  ]
+
+  sources += [
+    "badblocks.c",
+    "cregex_compile.c",
+    "cregex_parse.c",
+    "cregex_vm.c",
+    "darkmode.c",
+    "dos_locale.c",
+    "drive.c",
+    "format.c",
+    "dos.c",
+    "format_ext.c",
+    "format_fat32.c",
+    "icon.c",
+    "iso.c",
+    "localization.c",
+    "net.c",
+    "parser.c",
+    "pki.c",
+    "process.c",
+    "rufus.c",
+    "rufus.rc",
+    "hash.c",
+    "smart.c",
+    "stdfn.c",
+    "stdio.c",
+    "stdlg.c",
+    "syslinux.c",
+    "dev.c",
+    "ui.c",
+    "vhd.c",
+    "wue.c",
+    "xml.c",
   ]
 
   deps = [
-    "libcdio:libcdio-driver",
-    "libcdio:libcdio-iso9960",
-    "libcdio:libcdio-udf",
-    "syslinux:syslinux-libfat",
-    "syslinux:syslinux-libinstaller",
-    "syslinux:syslinux-win",
+    "libcdio:libcdio",
+    "syslinux:syslinux",
   ]
 
   public_deps = [
     "bled:bled",
     "ext2fs:ext2fs",
     "getopt:getopt",
-    "libcdio:libcdio",
+    "libcdio:libcdio-driver",
+    "libcdio:libcdio-iso9960",
+    "libcdio:libcdio-udf",
     "msvc-missing:msvc-missing",
     "ms-sys:ms-sys",
-    "syslinux:syslinux",
+    "syslinux:syslinux-libfat",
+    "syslinux:syslinux-libinstaller",
+    "syslinux:syslinux-win",
     #"wimlib:wimlib",
   ]
 }
@@ -82,8 +153,62 @@ group("rufus_libs") {
 # Rufus specific configs
 config("rufus_config") {
   configs = []
+  defines = []
+  cflags = [ "/std:clatest", ]
+  cflags_c = []
+  ldflags = []
+  libs = []
   # Must explicitly set this for sources
   configs += [ "//build/config/win:windowed", ]
+
+  include_dirs = [
+    "./",
+    "../",
+    "getopt/",
+    "libcdio/",
+    "res/",
+    "wimlib/",
+    "msvc-missing/",
+    "ms-sys/inc/",
+    "syslinux/libinstaller/",
+    "syslinux/libfat/",
+    "syslinux/win/",
+  ]
+
+  defines += [
+    "_RUFUS",
+    "_OFF_T_DEFINED",
+    "_off_t=__int64",
+    "off_t=_off_t",
+    "COBJMACROS",
+    "_CRTDBG_MAP_ALLOC",
+  ]
+
+  cflags_c += [
+    "-Wno-gnu-folding-constant",
+    "-Wno-deprecated-non-prototype",
+  ]
+
+  cflags += [
+    "-msse3",
+    "-mssse3",
+    "-msha",
+    "-Wno-pointer-sign",
+  ]
+
+  ldflags += [
+    "/BREPRO",
+    "/DEPENDENTLOADFLAG:0x800",
+  ]
+
+  libs += [
+    "crypt32.lib",
+    "setupapi.lib",
+    "virtdisk.lib",
+    "wininet.lib",
+    "wintrust.lib",
+    "wimlib.lib",
+  ]
 }
 
 # Precompiled header for common C/C++ stdlib stuff
@@ -94,9 +219,10 @@ precompiled_header("precompiled") {
 
 # Add language manifests to end of list
 windows_manifest("rufus_manifest") {
-  sources = [ as_invoker_manifest ]
+  sources = [ "rufus.manifest" ]
+  #sources = [ require_administrator_manifest ]
 
-  if (use_common_controls) {
-    sources += [ common_controls_manifest, ]
-  }
+  #if (use_common_controls) {
+    #sources += [ common_controls_manifest, ]
+  #}
 }

@@ -10,13 +10,15 @@
 #ifndef _USING_V110_SDK71_
 #define _USING_V110_SDK71_
 #endif
-#include <windows.h>
+#include "windows.h"
 #ifndef IDC_STATIC
 #define IDC_STATIC -1
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+#include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Neutral resources
@@ -257,7 +259,7 @@ BEGIN
     "#ifndef _USING_V110_SDK71_\r\n"
     "#define _USING_V110_SDK71_\r\n"
     "#endif\r\n"
-    "#include <windows.h>\r\n"
+    "#include ""windows.h""\r\n"
     "#ifndef IDC_STATIC\r\n"
     "#define IDC_STATIC -1\r\n"
     "#endif\r\n"
@@ -536,10 +538,9 @@ IDI_HASH_32             RCDATA                  "../res/icons/hash-32.png"
 
 // Must reference a manifest for visual styles and elevation
 // Oh, and it must happen at the end, or MinGW will ignore it!
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "rufus.manifest"
 #endif
-
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

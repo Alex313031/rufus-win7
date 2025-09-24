@@ -116,6 +116,9 @@ out:
 void SetDarkTitleBar(HWND hWnd)
 {
 	if (IsAtLeastWin11()) {
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
 		DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &is_darkmode_enabled, sizeof(is_darkmode_enabled));
 		return;
 	}
