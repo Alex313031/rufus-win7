@@ -532,8 +532,7 @@ static DWORD WINAPI VhdSaveImageThread(void* param)
 	}
 
 	if (!GetOverlappedResult(handle, &overlapped, &bytes_read, FALSE)) {
-		if (GetLastError() == ERROR_DISK_FULL)
-			ErrorStatus = RUFUS_ERROR(ERROR_FILE_TOO_LARGE);
+		r = GetLastError();
 		uprintf("Could not save virtual disk: %s", WindowsErrorString());
 		goto out;
 	}
@@ -550,6 +549,8 @@ out:
 	safe_free(img_save->DevicePath);
 	safe_free(img_save->ImagePath);
 	PostMessage(hMainDialog, UM_FORMAT_COMPLETED, (WPARAM)TRUE, 0);
+	if (r != 0 && !IS_ERROR(ErrorStatus))
+		ErrorStatus = RUFUS_ERROR(SCODE_CODE(r));
 	ExitThread(r);
 }
 
@@ -643,8 +644,7 @@ BOOL SaveImage(void)
 		// ISO requires oscdimg.exe. If not already present, attempt to download it.
 		static_sprintf(path, "%s\\%s\\oscdimg.exe", app_data_dir, FILES_DIR);
 		if (!PathFileExistsU(path)) {
-			if (MessageBoxExU(hMainDialog, lmprintf(MSG_337, "oscdimg.exe"), lmprintf(MSG_115),
-				MB_YESNO | MB_ICONWARNING | MB_IS_RTL, selected_langid) != IDYES)
+			if (Notification(MB_YESNO | MB_ICONWARNING, lmprintf(MSG_115), lmprintf(MSG_337, "oscdimg.exe")) != IDYES)
 				goto out;
 			IGNORE_RETVAL(_chdirU(app_data_dir));
 			IGNORE_RETVAL(_mkdir(FILES_DIR));

@@ -244,13 +244,7 @@ enum user_message_type {
 };
 
 /* Custom notifications */
-enum notification_type {
-	MSG_INFO,
-	MSG_WARNING,
-	MSG_ERROR,
-	MSG_QUESTION,
-	MSG_WARNING_QUESTION
-};
+#define MB_CLOSE 0x0F
 typedef INT_PTR (CALLBACK *Callback_t)(HWND, UINT, WPARAM, LPARAM);
 typedef struct {
 	WORD id;
@@ -688,7 +682,7 @@ typedef struct {
 #define UNATTEND_FORCE_S_MODE               0x00100
 #define UNATTEND_USE_MS2023_BOOTLOADERS     0x00200
 #define UNATTEND_FULL_MASK                  0x003FF
-#define UNATTEND_DEFAULT_MASK               0x000FF
+#define UNATTEND_DEFAULT_MASK               0x002FF		// Mask of values that are persisted
 #define UNATTEND_WINDOWS_TO_GO              0x10000		// Special flag for Windows To Go
 
 #define UNATTEND_WINPE_SETUP_MASK           (UNATTEND_SECUREBOOT_TPM_MINRAM)
@@ -805,7 +799,8 @@ extern INT_PTR CreateAboutBox(void);
 extern BOOL CreateTooltip(HWND hControl, const char* message, int duration);
 extern void DestroyTooltip(HWND hWnd);
 extern void DestroyAllTooltips(void);
-extern BOOL Notification(int type, const char* dont_display_setting, const notification_info* more_info, char* title, char* format, ...);
+extern int NotificationEx(int type, const char* dont_display_setting, const notification_info* more_info, const char* title, const char* format, ...);
+#define Notification(type, title, ...) NotificationEx(type, NULL, NULL, title, __VA_ARGS__)
 extern int CustomSelectionDialog(int style, char* title, char* message, char** choices, int size, int mask, int username_index);
 #define SelectionDialog(title, message, choices, size) CustomSelectionDialog(BS_AUTORADIOBUTTON, title, message, choices, size, 1, -1)
 extern void ListDialog(char* title, char* message, char** items, int size);

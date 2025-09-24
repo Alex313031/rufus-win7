@@ -164,56 +164,45 @@ char* CreateUnattendXml(int arch, int flags)
 					free(tzstr);
 				}
 			}
-			if (flags & UNATTEND_SET_USER || flags & UNATTEND_USE_MS2023_BOOTLOADERS) {
-				if (flags & UNATTEND_SET_USER) {
-					for (i = 0; (i < ARRAYSIZE(unallowed_account_names)) && (stricmp(unattend_username, unallowed_account_names[i]) != 0); i++);
-					if (i < ARRAYSIZE(unallowed_account_names)) {
-						uprintf("WARNING: '%s' is not allowed as local account name - Option ignored", unattend_username);
-					} else if (unattend_username[0] != 0) {
-						uprintf("• Use '%s' for local account name", unattend_username);
-						// If we create a local account in unattend.xml, then we can get Windows 11
-						// 22H2 to skip MSA even if the network is connected during installation.
-						fprintf(fd, "      <UserAccounts>\n");
-						fprintf(fd, "        <LocalAccounts>\n");
-						fprintf(fd, "          <LocalAccount wcm:action=\"add\">\n");
-						fprintf(fd, "            <Name>%s</Name>\n", unattend_username);
-						fprintf(fd, "            <DisplayName>%s</DisplayName>\n", unattend_username);
-						fprintf(fd, "            <Group>Administrators;Power Users</Group>\n");
-						// Sets an empty password for the account (which, in Microsoft's convoluted ways,
-						// needs to be initialized to the Base64 encoded UTF-16 string "Password").
-						// The use of an empty password has both the advantage of not having to ask users
-						// to type in a password in Rufus (which they might be weary of) as well as allowing
-						// automated logon during setup.
-						fprintf(fd, "            <Password>\n");
-						fprintf(fd, "              <Value>UABhAHMAcwB3AG8AcgBkAA==</Value>\n");
-						fprintf(fd, "              <PlainText>false</PlainText>\n");
-						fprintf(fd, "            </Password>\n");
-						fprintf(fd, "          </LocalAccount>\n");
-						fprintf(fd, "        </LocalAccounts>\n");
-						fprintf(fd, "      </UserAccounts>\n");
-						// Since we set a blank password, we'll ask the user to change it at next logon.
-						fprintf(fd, "      <FirstLogonCommands>\n");
-						fprintf(fd, "        <SynchronousCommand wcm:action=\"add\">\n");
-						fprintf(fd, "          <Order>%d</Order>\n", order++);
-						fprintf(fd, "          <CommandLine>net user &quot;%s&quot; /logonpasswordchg:yes</CommandLine>\n", unattend_username);
-						fprintf(fd, "        </SynchronousCommand>\n");
-						// Some people report that using the `net user` command above might reset the password expiration to 90 days...
-						// To alleviate that, blanket set passwords on the target machine to never expire.
-						fprintf(fd, "        <SynchronousCommand wcm:action=\"add\">\n");
-						fprintf(fd, "          <Order>%d</Order>\n", order++);
-						fprintf(fd, "          <CommandLine>net accounts /maxpwage:unlimited</CommandLine>\n");
-						fprintf(fd, "        </SynchronousCommand>\n");
-						fprintf(fd, "      </FirstLogonCommands>\n");
-					}
-				}
-				if (flags & UNATTEND_USE_MS2023_BOOTLOADERS) {
-					uprintf("• Use 'Windows UEFI CA 2023' signed bootloaders");
-					// TODO: Validate that we can have multiple <FirstLogonCommands> sections
+			if (flags & UNATTEND_SET_USER) {
+				for (i = 0; (i < ARRAYSIZE(unallowed_account_names)) && (stricmp(unattend_username, unallowed_account_names[i]) != 0); i++);
+				if (i < ARRAYSIZE(unallowed_account_names)) {
+					uprintf("WARNING: '%s' is not allowed as local account name - Option ignored", unattend_username);
+				} else if (unattend_username[0] != 0) {
+					uprintf("• Use '%s' for local account name", unattend_username);
+					// If we create a local account in unattend.xml, then we can get Windows 11
+					// 22H2 to skip MSA even if the network is connected during installation.
+					fprintf(fd, "      <UserAccounts>\n");
+					fprintf(fd, "        <LocalAccounts>\n");
+					fprintf(fd, "          <LocalAccount wcm:action=\"add\">\n");
+					fprintf(fd, "            <Name>%s</Name>\n", unattend_username);
+					fprintf(fd, "            <DisplayName>%s</DisplayName>\n", unattend_username);
+					fprintf(fd, "            <Group>Administrators;Power Users</Group>\n");
+					// Sets an empty password for the account (which, in Microsoft's convoluted ways,
+					// needs to be initialized to the Base64 encoded UTF-16 string "Password").
+					// The use of an empty password has both the advantage of not having to ask users
+					// to type in a password in Rufus (which they might be weary of) as well as allowing
+					// automated logon during setup.
+					fprintf(fd, "            <Password>\n");
+					fprintf(fd, "              <Value>UABhAHMAcwB3AG8AcgBkAA==</Value>\n");
+					fprintf(fd, "              <PlainText>false</PlainText>\n");
+					fprintf(fd, "            </Password>\n");
+					fprintf(fd, "          </LocalAccount>\n");
+					fprintf(fd, "        </LocalAccounts>\n");
+					fprintf(fd, "      </UserAccounts>\n");
+					// Since we set a blank password, we'll ask the user to change it at next logon.
+					// NB: In case you wanna try, please be aware that Microsoft doesn't let you have multiple
+					// <FirstLogonCommands> sections in unattend.xml. Don't ask me how I know... :(
 					fprintf(fd, "      <FirstLogonCommands>\n");
 					fprintf(fd, "        <SynchronousCommand wcm:action=\"add\">\n");
 					fprintf(fd, "          <Order>%d</Order>\n", order++);
-					// TODO: Validate the actual value on a machine where updates have been applied
-					fprintf(fd, "          <CommandLine>reg add HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Secureboot /v AvailableUpdates /t REG_DWORD /d 0x3c0 /f\n");
+					fprintf(fd, "          <CommandLine>net user &quot;%s&quot; /logonpasswordchg:yes</CommandLine>\n", unattend_username);
+					fprintf(fd, "        </SynchronousCommand>\n");
+					// Some people report that using the `net user` command above might reset the password expiration to 90 days...
+					// To alleviate that, blanket set passwords on the target machine to never expire.
+					fprintf(fd, "        <SynchronousCommand wcm:action=\"add\">\n");
+					fprintf(fd, "          <Order>%d</Order>\n", order++);
+					fprintf(fd, "          <CommandLine>net accounts /maxpwage:unlimited</CommandLine>\n");
 					fprintf(fd, "        </SynchronousCommand>\n");
 					fprintf(fd, "      </FirstLogonCommands>\n");
 				}
@@ -633,8 +622,7 @@ int SetWinToGoIndex(void)
 			version_name.String[i - 1], img_report.win_version.build, version_index.String[i - 1]);
 		// Need Windows 10 Creator Update or later for boot on REMOVABLE to work
 		if ((img_report.win_version.build < 15000) && (SelectedDrive.MediaType != FixedMedia)) {
-			if (MessageBoxExU(hMainDialog, lmprintf(MSG_098), lmprintf(MSG_190),
-				MB_YESNO | MB_ICONWARNING | MB_IS_RTL, selected_langid) != IDYES)
+			if (Notification(MB_YESNO | MB_ICONWARNING, lmprintf(MSG_190), lmprintf(MSG_098)) != IDYES)
 				wintogo_index = -2;
 		}
 		// Display a notice about WppRecorder.sys for 1809 ISOs
@@ -642,7 +630,7 @@ int SetWinToGoIndex(void)
 			notification_info more_info;
 			more_info.id = MORE_INFO_URL;
 			more_info.url = WPPRECORDER_MORE_INFO_URL;
-			Notification(MSG_INFO, NULL, &more_info, lmprintf(MSG_128, "Windows To Go"), lmprintf(MSG_133));
+			NotificationEx(MB_ICONINFORMATION | MB_CLOSE, NULL, &more_info, lmprintf(MSG_128, "Windows To Go"), lmprintf(MSG_133));
 		}
 	}
 
@@ -785,23 +773,28 @@ BOOL ApplyWindowsCustomization(char drive_letter, int flags)
 // NB: Work with a copy of unattend_xml_flags as a paremeter since we will modify it.
 {
 	BOOL r = FALSE, is_hive_mounted = FALSE, update_boot_wim = FALSE;
-	int i, wim_index = 2, wuc_index = 0;
+	int i, wim_index = 2, wuc_index = 0, num_replaced = 0;
 	const char* offline_hive_name = "RUFUS_OFFLINE_HIVE";
+	const char* reg_path = "Windows\\System32\\config\\SYSTEM";
+	const char* efi_ex_path = "Windows\\Boot\\EFI_EX";
+	const char* fonts_ex_path = "Windows\\Boot\\Fonts_EX";
 	char boot_wim_path[] = "?:\\sources\\boot.wim", key_path[64];
-	char tmp_dir[2][MAX_PATH] = { "", "" };
+	char tmp_path[2][MAX_PATH] = { "", "" };
 	char appraiserres_dll_src[] = "?:\\sources\\appraiserres.dll";
 	char appraiserres_dll_dst[] = "?:\\sources\\appraiserres.bak";
 	char setup_exe[] = "?:\\setup.exe";
 	char setup_dll[] = "?:\\setup.dll";
 	char md5sum_path[] = "?:\\md5sum.txt";
-	char path[MAX_PATH];
+	char path[MAX_PATH], *rep, *tmp_dir_end;
 	uint8_t* buf = NULL;
 	uint16_t setup_arch;
+	size_t len;
 	HKEY hKey = NULL, hSubKey = NULL;
 	LSTATUS status;
 	DWORD dwDisp, dwVal = 1, dwSize;
 	FILE* fd_md5sum;
 	WIMStruct* wim;
+	StrArray files;
 	struct wimlib_update_command wuc[2] = { 0 };
 
 	assert(unattend_xml_path != NULL);
@@ -882,8 +875,7 @@ BOOL ApplyWindowsCustomization(char drive_letter, int flags)
 		UpdateProgressWithInfoForce(OP_PATCH, MSG_325, 0, PATCH_PROGRESS_TOTAL);
 		// We only need to alter boot.wim if we have windowsPE data to deal with.
 		// If not, we can just copy our unattend.xml in \sources\$OEM$\$$\Panther\.
-		// We also need to do so if we use the 'Windows UEFI CA 2023' signed bootloaders.
-		if (flags & UNATTEND_WINPE_SETUP_MASK || flags & UNATTEND_USE_MS2023_BOOTLOADERS) {
+		if (flags & UNATTEND_WINPE_SETUP_MASK) {
 			if (validate_md5sum)
 				md5sum_totalbytes -= _filesizeU(boot_wim_path);
 			// Some "unofficial" ISOs have a modified boot.wim that doesn't have Windows Setup at index 2...
@@ -905,18 +897,16 @@ BOOL ApplyWindowsCustomization(char drive_letter, int flags)
 		}
 
 		if (flags & UNATTEND_SECUREBOOT_TPM_MINRAM) {
-			char tmp_path[MAX_PATH];
-			const char* reg_path = "Windows\\System32\\config\\SYSTEM";
-			if (GetTempDirNameU(temp_dir, APPLICATION_NAME, 0, tmp_dir[0]) == 0) {
+			if (GetTempDirNameU(temp_dir, APPLICATION_NAME, 0, tmp_path[0]) == 0) {
 				uprintf("WARNING: Could not create temp dir for registry changes");
 				goto copy_unattend;
 			}
-			static_sprintf(tmp_path, "%s\\SYSTEM", tmp_dir[0]);
+			static_sprintf(tmp_path[1], "%s\\SYSTEM", tmp_path[0]);
 			// Try to create the registry keys directly, and fallback to using unattend
 			// if that fails (which the Windows Store version is expected to do).
-			if (wimlib_extract_pathsU(wim, wim_index, tmp_dir[0], &reg_path, 1,
+			if (wimlib_extract_pathsU(wim, wim_index, tmp_path[0], &reg_path, 1,
 					WIMLIB_EXTRACT_FLAG_NO_PRESERVE_DIR_STRUCTURE) != 0 ||
-				!MountRegistryHive(HKEY_LOCAL_MACHINE, offline_hive_name, tmp_path)) {
+				!MountRegistryHive(HKEY_LOCAL_MACHINE, offline_hive_name, tmp_path[1])) {
 				uprintf("Falling back to creating the registry keys through unattend.xml");
 				goto copy_unattend;
 			}
@@ -950,7 +940,8 @@ BOOL ApplyWindowsCustomization(char drive_letter, int flags)
 				uprintf("Created 'HKLM\\SYSTEM\\Setup\\LabConfig\\%s' registry key", bypass_name[i]);
 			}
 			wuc[wuc_index].op = WIMLIB_UPDATE_OP_ADD;
-			wuc[wuc_index].add.fs_source_path = utf8_to_wchar(tmp_path);
+			wuc[wuc_index].add.fs_source_path = utf8_to_wchar(tmp_path[1]);
+			tmp_path[1][0] = '\0';
 			wuc[wuc_index].add.wim_target_path = L"Windows\\System32\\config\\SYSTEM";
 			wuc_index++;
 
@@ -1006,50 +997,70 @@ BOOL ApplyWindowsCustomization(char drive_letter, int flags)
 	}
 
 	if (flags & UNATTEND_USE_MS2023_BOOTLOADERS) {
-		StrArray files;
-		char tmp_dir2[MAX_PATH], *rep;
-		const char* efi_ex_path = "Windows\\Boot\\EFI_EX";
 		if_assert_fails(update_boot_wim)
 			goto out;
-		if (GetTempDirNameU(temp_dir, APPLICATION_NAME, 0, tmp_dir[1]) == 0) {
+		if (GetTempDirNameU(temp_dir, APPLICATION_NAME, 0, tmp_path[1]) == 0) {
 			uprintf("WARNING: Could not create temp dir for 2023 signed UEFI bootloaders");
 			goto out;
 		}
-		if (wimlib_extract_pathsU(wim, wim_index, tmp_dir[1], &efi_ex_path, 1,
-			WIMLIB_EXTRACT_FLAG_NO_ACLS | WIMLIB_EXTRACT_FLAG_NO_PRESERVE_DIR_STRUCTURE) != 0) {
-			uprintf("Could not find 2023 signed UEFI bootloaders - Ignoring option");
+		// If we have a '_EX' in the tmp name, we will have an issue
+		if_assert_fails(strstr(tmp_path[1], "_EX") == NULL)
+			goto out;
+		// Extract the EFI_EX and Fonts_EX files
+		if (wimlib_extract_pathsU(wim, wim_index, tmp_path[1], &efi_ex_path, 1,
+				WIMLIB_EXTRACT_FLAG_NO_ACLS | WIMLIB_EXTRACT_FLAG_NO_PRESERVE_DIR_STRUCTURE) != 0 ||
+			wimlib_extract_pathsU(wim, wim_index, tmp_path[1], &fonts_ex_path, 1,
+				WIMLIB_EXTRACT_FLAG_NO_ACLS | WIMLIB_EXTRACT_FLAG_NO_PRESERVE_DIR_STRUCTURE) != 0) {
+			uprintf("Could not extract 2023 signed UEFI bootloaders - Ignoring option");
 		} else {
-			static_strcat(tmp_dir[1], "\\EFI");
-			static_sprintf(tmp_dir2, "%s_EX", tmp_dir[1]);
-			MoveFileU(tmp_dir2, tmp_dir[1]);
+			len = strlen(tmp_path[1]);
+			tmp_dir_end = &tmp_path[1][len];
+
+			// Copy/override the Font files
+			static_strcat(tmp_path[1], "\\Fonts_EX");
 			StrArrayCreate(&files, 64);
-			ListDirectoryContent(&files, tmp_dir[1], LIST_DIR_TYPE_FILE | LIST_DIR_TYPE_RECURSIVE);
+			ListDirectoryContent(&files, tmp_path[1], LIST_DIR_TYPE_FILE);
 			for (i = 0; i < (int)files.Index; i++) {
-				rep = remove_substr(files.String[i], "_EX");
-				assert(rep != NULL);
-				if (!MoveFileU(files.String[i], rep))
-					uprintf("WARNING: Could not rename '%s': %s", files.String[i], WindowsErrorString());
+				static_sprintf(path, "%c:\\efi\\microsoft\\boot%s", drive_letter, &files.String[i][len]);
+				rep = remove_substr(path, "_EX");
+				if (!CopyFileU(files.String[i], rep, FALSE))
+					uprintf("WARNING: Could not copy '%s': %s", path, WindowsErrorString());
+				else
+					num_replaced++;
 				safe_free(rep);
 			}
 			StrArrayDestroy(&files);
+
 			// Replace /EFI/Boot/boot###.efi
 			for (i = 1; i < ARRAYSIZE(efi_archname); i++) {
-				static_sprintf(tmp_dir2, "%c:\\efi\\boot\\boot%s.efi", drive_letter, efi_archname[i]);
-				if (!PathFileExistsA(tmp_dir2))
+				*tmp_dir_end = '\0';
+				static_strcat(tmp_path[1], "\\EFI_EX\\bootmgfw_EX.efi");
+				static_sprintf(path, "%c:\\efi\\boot\\boot%s.efi", drive_letter, efi_archname[i]);
+				if (!PathFileExistsA(path))
 					continue;
-				static_sprintf(path, "%s\\bootmgfw.efi", tmp_dir[1]);
-				if (!CopyFileU(path, tmp_dir2, FALSE))
+				if (!CopyFileU(tmp_path[1], path, FALSE))
 					uprintf("WARNING: Could not replace 'boot%s.efi': %s", efi_archname[i], WindowsErrorString());
+				else
+					num_replaced++;
 				break;
 			}
+
 			// Replace /bootmgr.efi
-			static_sprintf(path, "%s\\bootmgr.efi", tmp_dir[1]);
-			if (!CopyFileU(path, tmp_dir2, FALSE))
+			*tmp_dir_end = '\0';
+			static_strcat(tmp_path[1], "\\EFI_EX\\bootmgr_EX.efi");
+			static_sprintf(path, "%c:\\bootmgr.efi", drive_letter);
+			if (!CopyFileU(tmp_path[1], path, FALSE))
 				uprintf("WARNING: Could not replace 'bootmgr.efi': %s", WindowsErrorString());
-			if (wimlib_add_treeU(wim, wim_index, tmp_dir[1], "Windows\\Boot\\EFI", 0))
-				uprintf("WARNING: Could not replace EFI bootloader files with 'Windows UEFI CA 2023' versions");
 			else
-				uprintf("Replaced EFI bootloader files with 'Windows UEFI CA 2023' signed versions");
+				num_replaced++;
+			if (num_replaced != 0) {
+				uprintf("Replaced %d EFI bootloader files with 'Windows UEFI CA 2023' compatible versions.", num_replaced);
+				uprintf("Note that to boot this media, you must have a system where the 'Windows UEFI CA 2023'");
+				uprintf("Secure Boot certificate has been installed.");
+				uprintf("If needed, this can be accomplished using Mosby [https://github.com/pbatard/Mosby],");
+				uprintf("which can be found, ready to use, in the UEFI Shell ISO images downloaded by Rufus.");
+			}
+			*tmp_dir_end = '\0';	// Else we won't be able to delete the temp dir
 		}
 	}
 
@@ -1071,9 +1082,9 @@ out:
 			uprintf("Error: Failed to update %s", boot_wim_path);
 			r = FALSE;
 		}
-		for (i = 0; i < ARRAYSIZE(tmp_dir); i++)
-			if (tmp_dir[i][0])
-				SHDeleteDirectoryExU(NULL, tmp_dir[i], FOF_NO_UI);
+		for (i = 0; i < ARRAYSIZE(tmp_path); i++)
+			if (tmp_path[i][0])
+				SHDeleteDirectoryExU(NULL, tmp_path[i], FOF_NO_UI);
 		for (i = 0; i < wuc_index; i++)
 			free(wuc[i].add.fs_source_path);
 		wimlib_free(wim);

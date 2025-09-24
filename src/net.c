@@ -402,8 +402,7 @@ out:
 	if ((bPromptOnError) && (DownloadStatus != 200)) {
 		PrintInfo(0, MSG_242);
 		SetLastError(error_code);
-		MessageBoxExU(hMainDialog, IS_ERROR(ErrorStatus) ? StrError(ErrorStatus, FALSE) : WindowsErrorString(),
-			lmprintf(MSG_044), MB_OK | MB_ICONERROR | MB_IS_RTL, selected_langid);
+		Notification(MB_OK | MB_ICONERROR, lmprintf(MSG_044), IS_ERROR(ErrorStatus) ? StrError(ErrorStatus, FALSE) : WindowsErrorString());
 	}
 	safe_closehandle(hFile);
 	free(url_sig);
@@ -505,8 +504,7 @@ static void CheckForDBXUpdates(int verbose)
 		if (timestamp <= MAX(dbx_info[i].timestamp, (uint64_t)ReadSetting64(reg_name)))
 			continue;
 		if (!already_prompted) {
-			r = MessageBoxExU(hMainDialog, lmprintf(MSG_354), lmprintf(MSG_353),
-				MB_YESNO | MB_ICONWARNING | MB_IS_RTL, selected_langid);
+			r = Notification(MB_YESNO | MB_ICONWARNING, lmprintf(MSG_353), lmprintf(MSG_354));
 			already_prompted = TRUE;
 			if (r != IDYES)
 				break;
@@ -936,10 +934,10 @@ static DWORD WINAPI DownloadISOThread(LPVOID param)
 				SendMessage(hMainDialog, UM_PROGRESS_EXIT, 0, 0);
 				if (SCODE_CODE(ErrorStatus) == ERROR_CANCELLED) {
 					uprintf("Download cancelled by user");
-					Notification(MSG_INFO, NULL, NULL, lmprintf(MSG_211), lmprintf(MSG_041));
+					Notification(MB_ICONINFORMATION | MB_CLOSE, lmprintf(MSG_211), lmprintf(MSG_041));
 					PrintInfo(0, MSG_211);
 				} else {
-					Notification(MSG_ERROR, NULL, NULL, lmprintf(MSG_194, GetShortName(url)), lmprintf(MSG_043, WindowsErrorString()));
+					Notification(MB_ICONERROR | MB_CLOSE, lmprintf(MSG_194, GetShortName(url)), lmprintf(MSG_043, WindowsErrorString()));
 					PrintInfo(0, MSG_212);
 				}
 			} else {
