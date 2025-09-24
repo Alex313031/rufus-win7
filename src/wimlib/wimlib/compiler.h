@@ -52,7 +52,7 @@
 #endif
 
 #ifdef _MSC_VER
-#if !__has_attribute(attribute)
+#if !__has_attribute(attribute) && !defined(__clang__)
 #define __attribute__(x)
 #endif
 
@@ -226,6 +226,7 @@
 #define _PTR(x)	x
 #endif
 
+#if !defined(__clang__)
 #ifdef _MSC_VER
 #include <intrin.h>
 #include <stdint.h>
@@ -283,5 +284,7 @@ uint32_t __inline __builtin_ctzll(uint64_t value)
 #endif
 #define __builtin_clzl __builtin_clzll
 #endif
+
+#endif // !defined(__clang__)
 
 #endif /* _WIMLIB_COMPILER_H */
