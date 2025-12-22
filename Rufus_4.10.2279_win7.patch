@@ -16,7 +16,7 @@ index 00000000..a9d87eea
 --- /dev/null
 +++ b/.github/issue_template.md
 @@ -0,0 +1,48 @@
-+﻿<!-- 
++<!--
 +PLEASE READ THIS CAREFULLY:
 +
 +1. You *MUST* read and complete the steps from the checklist below, by placing
