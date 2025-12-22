@@ -1,3 +1,4 @@
+# Tested against commit 1c201cc01f3b80a5761d13387b6038cf76cb0a2f
 diff --git a/.github/FUNDING.yml b/.github/FUNDING.yml
 new file mode 100644
 index 00000000..0b337b56
