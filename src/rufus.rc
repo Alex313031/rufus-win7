@@ -10,13 +10,15 @@
 #ifndef _USING_V110_SDK71_
 #define _USING_V110_SDK71_
 #endif
-#include <windows.h>
+#include "windows.h"
 #ifndef IDC_STATIC
 #define IDC_STATIC -1
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+#include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Neutral resources
@@ -259,7 +261,7 @@ BEGIN
     "#ifndef _USING_V110_SDK71_\r\n"
     "#define _USING_V110_SDK71_\r\n"
     "#endif\r\n"
-    "#include <windows.h>\r\n"
+    "#include ""windows.h""\r\n"
     "#ifndef IDC_STATIC\r\n"
     "#define IDC_STATIC -1\r\n"
     "#endif\r\n"
@@ -425,12 +427,12 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "Comments", "https://rufus.ie"
-            VALUE "CompanyName", "Akeo Consulting"
-            VALUE "FileDescription", "Rufus"
+            VALUE "Comments", "https://github.com/Alex313031/rufus-win7"
+            VALUE "CompanyName", "Alex313031"
+            VALUE "FileDescription", "Rufus for legacy Windows"
             VALUE "FileVersion", "4.15.2396"
             VALUE "InternalName", "Rufus"
-            VALUE "LegalCopyright", "© 2011-2026 Pete Batard (GPL v3)"
+            VALUE "LegalCopyright", "© 2011-2026 Pete Batard & Alex313031 (GPL v3)"
             VALUE "LegalTrademarks", "https://www.gnu.org/licenses/gpl-3.0.html"
             VALUE "OriginalFilename", "rufus-4.15.exe"
             VALUE "ProductName", "Rufus"
@@ -538,10 +540,9 @@ IDI_HASH_32             RCDATA                  "../res/icons/hash-32.png"
 
 // Must reference a manifest for visual styles and elevation
 // Oh, and it must happen at the end, or MinGW will ignore it!
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "rufus.manifest"
 #endif
-
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

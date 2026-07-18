@@ -1,0 +1,36 @@
+# getopt (Minimal getopt implementation)
+
+# POSIX getopt for Windows
+static_library("getopt") {
+  configs += [ ":getopt_config" ]
+
+  sources = [
+    "getopt.h",
+  ]
+
+  sources += [
+    "getopt.c",
+    "getopt1.c",
+  ]
+
+  #public_deps = []
+}
+
+config("getopt_config") {
+  configs = []
+
+  cflags = [
+    "-Wno-implicit-function-declaration",
+    "-Wno-deprecated-non-prototype",
+    "-Wno-old-style-definition",
+  ]
+
+  include_dirs = [
+    "./",
+    "../",
+  ]
+
+  defines = [
+    "HAVE_STRING_H",
+  ]
+}

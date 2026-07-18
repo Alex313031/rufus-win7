@@ -31,7 +31,7 @@
 *.opt
 *.org
 *.p7x
-*.patch
+#*.patch
 *.pc
 *.pdb
 *.pdf
@@ -66,3 +66,5 @@ embedded.loc
 /rufus_files
 stamp-h1
 /.vs/rufus
+/.vs/Rufus
+/release/

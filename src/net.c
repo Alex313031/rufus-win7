@@ -40,7 +40,12 @@
 #include "msapi_utf8.h"
 #include "localization.h"
 #include "bled/bled.h"
+
+#if defined(__clang__)
+#include "../res/dbx/dbx_info.h"
+#else
 #include "dbx/dbx_info.h"
+#endif // defined(__clang__)
 
 #include "settings.h"
 
@@ -550,7 +555,7 @@ static DWORD WINAPI CheckForUpdatesThread(LPVOID param)
 		} while ((!force_update_check) && ((op_in_progress || (dialog_showing > 0))));
 		if (!force_update_check) {
 			if ((ReadSetting32(SETTING_UPDATE_INTERVAL) == -1)) {
-				vuprintf("Check for updates disabled, as per settings.");
+				//vuprintf("Check for updates disabled, as per settings.");
 				goto out;
 			}
 			reg_time = ReadSetting64(SETTING_LAST_UPDATE);

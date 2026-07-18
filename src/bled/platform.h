@@ -25,9 +25,11 @@
 #endif
 
 #if !__GNUC_PREREQ(2,7)
+#if!defined (__clang__)
 # ifndef __attribute__
 #  define __attribute__(x)
 # endif
+#endif
 #endif
 
 #undef inline

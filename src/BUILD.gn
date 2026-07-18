@@ -1,0 +1,202 @@
+# Rufus binary, supporting libs, and tests
+# https://github.com/pbatard/rufus
+# Port of Rufus from make/MSVC to GN/Ninja/LLVM
+
+# Builds all that's needed to make a release
+group("rufus_exe") {
+  public_deps = [
+    ":rufus",
+    ":rufus_libs",
+  ]
+}
+
+# Runtime and compile tests
+group("rufus_tests") {
+  testonly = true
+  public_deps = [
+    ":rufus_libs",
+  ]
+}
+
+# Main rufus app
+executable("rufus") {
+  configs -= [
+    "//build/config/win:console_subsystem",
+    #"//build/config/win:nominmax",
+  ]
+
+  configs += [
+    "//build/config/win:windowed_subsystem",
+    ":rufus_config",
+  ]
+
+  sources = [
+    #"../res/dbx/dbx_info.h",
+    "../res/grub2/grub2_version.h",
+    "../res/grub/grub_version.h",
+    "badblocks.h",
+    "bled/bled.h",
+    "cregex.h",
+    "darkmode.h",
+    "drive.h",
+    "efi.h",
+    "format.h",
+    "gpt_types.h",
+    "hdd_vs_ufd.h",
+    "mbr_types.h",
+    "missing.h",
+    #"msvc-missing/unistd.h",
+    "ntdll.h",
+    "settings.h",
+    "libcdio/cdio/cdio.h",
+    "libcdio/cdio/iso9660.h",
+    "libcdio/cdio/udf.h",
+    "localization.h",
+    "localization_data.h",
+    "msapi_utf8.h",
+    "dos.h",
+    "registry.h",
+    "resource.h",
+    "rufus.h",
+    "license.h",
+    "db.h",
+    "smart.h",
+    "dev.h",
+    "ui.h",
+    "ui_data.h",
+    "vhd.h",
+    "winio.h",
+    "wue.h",
+    "xml.h",
+  ]
+
+  sources += [
+    "badblocks.c",
+    "cregex_compile.c",
+    "cregex_parse.c",
+    "cregex_vm.c",
+    "darkmode.c",
+    "dos_locale.c",
+    "drive.c",
+    "format.c",
+    "dos.c",
+    "format_ext.c",
+    "format_fat32.c",
+    "icon.c",
+    "iso.c",
+    "localization.c",
+    "net.c",
+    "parser.c",
+    "pki.c",
+    "process.c",
+    "rufus.c",
+    "rufus.rc",
+    "hash.c",
+    "smart.c",
+    "stdfn.c",
+    "stdio.c",
+    "stdlg.c",
+    "syslinux.c",
+    "dev.c",
+    "ui.c",
+    "vhd.c",
+    "wue.c",
+    "xml.c",
+  ]
+
+  deps = [
+    "libcdio:libcdio",
+    "syslinux:syslinux",
+  ]
+
+  public_deps = [
+    "bled:bled",
+    "ext2fs:ext2fs",
+    "getopt:getopt",
+    "libcdio:libcdio-driver",
+    "libcdio:libcdio-iso9960",
+    "libcdio:libcdio-udf",
+    "ms-sys:ms-sys",
+    "syslinux:syslinux-libfat",
+    "syslinux:syslinux-libinstaller",
+    "syslinux:syslinux-win",
+    "wimlib:wimlib",
+  ]
+}
+
+# Rufus supporting libraries as a standalone target
+group("rufus_libs") {
+  public_deps = [
+    "bled:bled",
+    "ext2fs:ext2fs",
+    "getopt:getopt",
+    "libcdio:libcdio",
+    "libcdio:libcdio-driver",
+    "libcdio:libcdio-iso9960",
+    "libcdio:libcdio-udf",
+    "ms-sys:ms-sys",
+    "syslinux:syslinux",
+    "syslinux:syslinux-libfat",
+    "syslinux:syslinux-libinstaller",
+    "syslinux:syslinux-win",
+    "wimlib:wimlib",
+  ]
+}
+
+# Rufus specific configs
+config("rufus_config") {
+  configs = []
+  defines = []
+  cflags = [ "/std:clatest", ]
+  cflags_c = []
+  ldflags = []
+  libs = []
+  # Must explicitly set this for sources
+  configs += [ "//build/config/win:windowed_subsystem", ]
+
+  include_dirs = [
+    "./",
+    "../",
+    "getopt/",
+    "libcdio/",
+    "res/",
+    "wimlib/",
+    #"msvc-missing/",
+    "ms-sys/inc/",
+    "syslinux/libinstaller/",
+    "syslinux/libfat/",
+    "syslinux/win/",
+  ]
+
+  defines += [
+    "_RUFUS",
+    "COBJMACROS",
+    "_CRTDBG_MAP_ALLOC",
+  ]
+
+  cflags_c += [
+    "-Wno-gnu-folding-constant",
+    "-Wno-deprecated-non-prototype",
+  ]
+
+  cflags += [
+    "-msse3",
+    "-mssse3",
+    "-msha",
+    "-Wno-pointer-sign",
+  ]
+
+  ldflags += [
+    "/BREPRO",
+    "/DEPENDENTLOADFLAG:0x800",
+  ]
+
+  libs += [
+    "crypt32.lib",
+    "setupapi.lib",
+    "virtdisk.lib",
+    "wininet.lib",
+    "wintrust.lib",
+    "wimlib.lib",
+  ]
+}

@@ -10,7 +10,7 @@
 
 #if !defined(__COM_ERR_H) && !defined(__COM_ERR_H__)
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__clang__)
 #define COM_ERR_ATTR(x) __attribute__(x)
 #else
 #define COM_ERR_ATTR(x)
@@ -31,7 +31,11 @@ struct et_list;
 /* For use with Rufus */
 extern void uprintf(const char *format, ...);
 #define VA_ARGS(...) , ##__VA_ARGS__
+#if !defined(__clang__)
 #define com_err(src, err, fmt, ...) uprintf("%s: [%08X] " # fmt, src?src:"ext2fs", err - EXT2_ET_BASE VA_ARGS(__VA_ARGS__))
+#else
+#define com_err(src, err, fmt, ...) uprintf("%s: [%08X] " # fmt, src?src:"ext2fs", err - EXT2_ET_BASE , ##__VA_ARGS__)
+#endif
 
 extern char const *error_message (long);
 extern void (*com_err_hook) (const char *, long, const char *, va_list);

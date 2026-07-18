@@ -1,0 +1,18 @@
+# unistd.h (POSIX unistd.h implementation for Win32)
+
+source_set("msvc-missing") {
+  configs += [ ":unistd_config" ]
+
+  sources = [ "unistd.h", ]
+}
+
+config("unistd_config") {
+  configs = []
+
+  cflags = []
+
+  include_dirs = [
+    "./",
+    "../",
+  ]
+}
