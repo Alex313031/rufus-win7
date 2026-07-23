@@ -19,11 +19,11 @@ static_library("wimlib") {
     "wimlib\case.h",
     "wimlib\chunk_compressor.h",
     "wimlib\compiler.h",
-    "wimlib\compressor_ops.h",
     "wimlib\compress_common.h",
+    "wimlib\compressor_ops.h",
     "wimlib\cpu_features.h",
-    "wimlib\decompressor_ops.h",
     "wimlib\decompress_common.h",
+    "wimlib\decompressor_ops.h",
     "wimlib\dentry.h",
     "wimlib\divsufsort.h",
     "wimlib\encoding.h",
@@ -77,8 +77,8 @@ static_library("wimlib") {
     "wimlib\write.h",
     "wimlib\xattr.h",
     "wimlib\xml.h",
-    "wimlib\xmlproc.h",
     "wimlib\xml_windows.h",
+    "wimlib\xmlproc.h",
     "wimlib\xpress_constants.h",
     "wimlib_tchar.h",
   ]
@@ -141,13 +141,13 @@ static_library("wimlib") {
     "win32_vss.c",
     "write.c",
     "xml.c",
-    "xmlproc.c",
     "xml_windows.c",
+    "xmlproc.c",
     "xpress_compress.c",
     "xpress_decompress.c",
   ]
 
-  public_deps = [ "../libcdio:libcdio", ]
+  public_deps = [ "../libcdio" ]
 }
 
 config("wimlib_config") {
@@ -197,9 +197,14 @@ config("wimlib_config") {
     # with the rest of Rufus. No-op on x64 (already 64-bit).
     "_TIME_BITS=64",
 
-    # wimlibs requires Windows 7
+    # wimlib requires Windows 7, regardless of the global winver arg. These
+    # override the global windows_config values (later -D wins).
     "WINVER=0x0601",
     "_WIN32_WINNT=0x0601",
     "_WIN32_IE=0x0800",
   ]
+
+  # See rufus_config: keep the intentional winver override from tripping
+  # -Wmacro-redefined on every TU.
+  cflags += [ "-Wno-macro-redefined" ]
 }

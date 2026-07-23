@@ -224,12 +224,17 @@ config("rufus_config") {
     "-Wno-pointer-sign",
   ]
 
-  # Rufus requires Windows 7
+  # Rufus requires Windows 7, regardless of the global winver arg. The global
+  # windows_config emits its own WINVER/_WIN32_WINNT/_WIN32_IE, and these later
+  # -D's are the ones that win; suppress -Wmacro-redefined so the intentional
+  # override doesn't warn on every TU when the global value (or its hex
+  # spelling) differs.
   defines += [
     "WINVER=0x0601",
     "_WIN32_WINNT=0x0601",
     "_WIN32_IE=0x0800",
   ]
+  cflags += [ "-Wno-macro-redefined" ]
 
   ldflags += [
     # /BREPRO (reproducible build) in the lld GNU/MinGW driver spelling. The
