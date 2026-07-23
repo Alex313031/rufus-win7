@@ -114,8 +114,9 @@ config("ext2fs_config") {
     defines += [ "_CRTDBG_MAP_ALLOC", ]
   }
 
+  # Bare names (GN prepends the -l switch); "*.lib" would not resolve.
   libs = [
-    "odbc32.lib",
-    "odbccp32.lib",
+    "odbc32",
+    "odbccp32",
   ]
 }

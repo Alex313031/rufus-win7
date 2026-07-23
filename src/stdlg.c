@@ -416,7 +416,7 @@ INT_PTR CALLBACK AboutCallback(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		ResizeButtonHeight(hDlg, IDOK);
 		static_sprintf(about_blurb, about_blurb_format, lmprintf(MSG_174|MSG_RTF),
 			lmprintf(MSG_175|MSG_RTF, rufus_version[0], rufus_version[1], rufus_version[2]),
-			"Copyright © 2011-2026 Pete Batard and Alex313031",
+			"Copyright \251 2011-2026 Pete Batard and Alex313031",
 			lmprintf(MSG_176|MSG_RTF), lmprintf(MSG_177|MSG_RTF), lmprintf(MSG_178|MSG_RTF));
 		for (i = 0; i < ARRAYSIZE(hEdit); i++) {
 			hEdit[i] = GetDlgItem(hDlg, edit_id[i]);
@@ -1808,7 +1808,7 @@ BOOL SetUpdateCheck(void)
 {
 	//BOOL enable_updates;
 	uint64_t commcheck = GetTickCount64();
-	char filename[MAX_PATH] = "", exename[] = APPLICATION_NAME ".exe";
+	//char filename[MAX_PATH] = "", exename[] = APPLICATION_NAME ".exe";
 	//size_t fn_len, exe_len;
 
 	// Test if we can read and write settings. If not, forget it.

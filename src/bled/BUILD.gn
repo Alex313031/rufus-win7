@@ -37,6 +37,7 @@ static_library("bled") {
 
   sources += [
     "bled.c",
+    "bled_size.c",
     "crc32.c",
     "data_align.c",
     "data_extract_all.c",
@@ -100,8 +101,9 @@ config("bled_config") {
     defines += [ "_CRTDBG_MAP_ALLOC", ]
   }
 
+  # Bare names (GN prepends the -l switch); "*.lib" would not resolve.
   libs = [
-    "odbc32.lib",
-    "odbccp32.lib",
+    "odbc32",
+    "odbccp32",
   ]
 }

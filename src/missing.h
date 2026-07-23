@@ -64,7 +64,7 @@
 #define bswap_uint64 _byteswap_uint64
 #define bswap_uint32 _byteswap_ulong
 #define bswap_uint16 _byteswap_ushort
-#elif defined (__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
+#elif defined(__clang__) || (defined (__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))))
 #define bswap_uint64 __builtin_bswap64
 #define bswap_uint32 __builtin_bswap32
 #define bswap_uint16 __builtin_bswap16

@@ -1,5 +1,7 @@
 # wimlib (https://wimlib.net/)
 
+import("//build/config/win/win.gni")  # use_clang_cl
+
 # Open source Windows Imaging (WIM) library
 static_library("wimlib") {
   configs += [ ":wimlib_config" ]
@@ -151,19 +153,33 @@ static_library("wimlib") {
 config("wimlib_config") {
   configs = []
 
-  cflags_c = [
-    "/std:c17",
-  ]
-
   cflags = [
     "-Wno-implicit-function-declaration",
+    "-Wno-pointer-sign",
   ]
 
+  # Pin wimlib to 23 locally, independent of the project-wide c_std. Appended
+  # after compiler_defaults' -std=cN, the later flag wins; the driver spelling
+  # differs (clang-cl needs the /clang: passthrough, so the old bare /std:23
+  # was silently ignored -- "argument unused" -- and never actually took effect).
+  if (use_clang_cl) {
+    cflags_c = [ "/clang:-std=c23" ]
+  } else {
+    cflags_c = [ "-std=c23" ]
+  }
+
+  # Wimlib requires SSE2
+  cflags += [ "-msse2" ]
+
+  # NOTE: no "../msvc-missing" here. That dir only shadows <unistd.h> with an
+  # MSVC replacement; under the MinGW toolchain the real <unistd.h> exists and
+  # the shim's ftruncate/snwprintf/vsnwprintf macros collide with the genuine
+  # MinGW prototypes (e.g. wchar.h's snwprintf). The C standard comes from the
+  # global c_std (compiler_defaults).
   include_dirs = [
     "./",
     "../",
     "../libcdio",
-    "../msvc-missing",
   ]
 
   defines = [
@@ -172,5 +188,13 @@ config("wimlib_config") {
     "UNICODE",
     "_FILE_OFFSET_BITS=64",
     "__SSE2__",
+
+    # wimlib requires a 64-bit time_t (STATIC_ASSERT in timestamp.c; the WIM
+    # format uses 64-bit, Y2038-safe timestamps). MinGW defaults 32-bit builds
+    # to _USE_32BIT_TIME_T for legacy msvcrt compat (_mingw.h), so force 64-bit
+    # here. This is wimlib-internal: its public API (wimlib.h) exposes explicit
+    # int32/int64 wimlib_timespec, not raw time_t, so there is no ABI mismatch
+    # with the rest of Rufus. No-op on x64 (already 64-bit).
+    "_TIME_BITS=64",
   ]
 }

@@ -5,8 +5,12 @@
 
 /* Workaround unistd.h for MS compilers */
 
-#ifndef _MSC_VER
-#error This header should only be used with Microsoft compilers
+/* MSVC lacks <unistd.h>; this shim provides the bits Rufus needs. clang-cl in
+ * MinGW (--target=...-gnu) mode does not define _MSC_VER, but is MSVC-flag
+ * compatible and uses the same MSVCRT, so accept clang/GCC here too. Error only
+ * for genuinely unknown compilers. */
+#if !defined(_MSC_VER) && !defined(__clang__) && !defined(__GNUC__)
+#error This header should only be used with Microsoft or compatible (clang/GCC) compilers
 #endif
 
 #include <windows.h>

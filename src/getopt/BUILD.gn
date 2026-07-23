@@ -1,5 +1,7 @@
 # getopt (Minimal getopt implementation)
 
+import("//build/config/win/win.gni")  # use_clang_cl
+
 # POSIX getopt for Windows
 static_library("getopt") {
   configs += [ ":getopt_config" ]
@@ -24,6 +26,17 @@ config("getopt_config") {
     "-Wno-deprecated-non-prototype",
     "-Wno-old-style-definition",
   ]
+
+  # This is legacy GNU getopt with K&R-style function definitions, which C23
+  # REMOVED (a hard error, not a warning the -Wno- flags above can silence).
+  # Pin this library to C17 locally so it builds regardless of the project-wide
+  # c_std. Appended after compiler_defaults' -std=cN, the later flag wins; the
+  # driver spelling differs (clang-cl needs the /clang: passthrough).
+  if (use_clang_cl) {
+    cflags_c = [ "/clang:-std=c17" ]
+  } else {
+    cflags_c = [ "-std=c17" ]
+  }
 
   include_dirs = [
     "./",

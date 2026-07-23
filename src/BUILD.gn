@@ -2,6 +2,8 @@
 # https://github.com/pbatard/rufus
 # Port of Rufus from make/MSVC to GN/Ninja/LLVM
 
+import("//build/config/win/win.gni")  # use_clang_cl
+
 # Builds all that's needed to make a release
 group("rufus_exe") {
   public_deps = [
@@ -20,13 +22,15 @@ group("rufus_tests") {
 
 # Main rufus app
 executable("rufus") {
-  configs -= [
-    "//build/config/win:console_subsystem",
-    #"//build/config/win:nominmax",
-  ]
-
+  # Rufus provides a narrow WinMain() entry point (and fetches wide argv itself
+  # via __wgetmainargs), so it must NOT be linked with -municode, which selects
+  # the wide wWinMainCRTStartup and then fails to resolve wWinMain. Swap the
+  # default :unicode config (which adds -municode) for :unicode_base, keeping
+  # UNICODE/_UNICODE and UTF-8 charset handling without the Unicode entry point.
+  # (Executables also default to :windowed_subsystem, which :rufus_config re-adds.)
+  configs -= [ "//build/config/win:unicode" ]
   configs += [
-    "//build/config/win:windowed_subsystem",
+    "//build/config/win:unicode_base",
     ":rufus_config",
   ]
 
@@ -147,12 +151,18 @@ group("rufus_libs") {
 config("rufus_config") {
   configs = []
   defines = []
-  cflags = [ "/std:clatest", ]
+  cflags = []
   cflags_c = []
   ldflags = []
   libs = []
   # Must explicitly set this for sources
   configs += [ "//build/config/win:windowed_subsystem", ]
+
+  if (use_clang_cl) {
+    cflags_c = [ "/clang:-std=c23" ]
+  } else {
+    cflags_c = [ "-std=c23" ]
+  }
 
   include_dirs = [
     "./",
@@ -177,9 +187,12 @@ config("rufus_config") {
   cflags_c += [
     "-Wno-gnu-folding-constant",
     "-Wno-deprecated-non-prototype",
+    "-Wno-dll-attribute-on-redeclaration",
+    "-Wno-pointer-sign",
   ]
 
   cflags += [
+    "-msse2",
     "-msse3",
     "-mssse3",
     "-msha",
@@ -187,16 +200,36 @@ config("rufus_config") {
   ]
 
   ldflags += [
-    "/BREPRO",
-    "/DEPENDENTLOADFLAG:0x800",
+    # /BREPRO (reproducible build) in the lld GNU/MinGW driver spelling. The
+    # MSVC /DEPENDENTLOADFLAG:0x800 (LOAD_LIBRARY_SEARCH_SYSTEM32) has no lld
+    # GNU-driver equivalent, and Rufus already applies it at runtime via
+    # SetDefaultDllDirectories(), so it is dropped here rather than converted.
+    "-Wl,--no-insert-timestamp",
   ]
 
+  # System import libraries. GN prepends the toolchain lib switch (-l), so these
+  # must be bare names, NOT "*.lib" (which would become -lcrypt32.lib and fail
+  # to resolve against libcrypt32.a). wimlib is built by this project and linked
+  # via the wimlib:wimlib dependency, so it must NOT be listed here.
   libs += [
-    "crypt32.lib",
-    "setupapi.lib",
-    "virtdisk.lib",
-    "wininet.lib",
-    "wintrust.lib",
-    "wimlib.lib",
+    # Import libraries from rufus.vcxproj's AdditionalDependencies, minus the
+    # ones :windowed_subsystem already provides (kernel32/user32/shell32/comctl32).
+    # clang-cl's /Zl (see the toolchain) strips the MSVC autolink directives, so
+    # every needed import library must be listed explicitly.
+    "advapi32",
+    "comdlg32",
+    "crypt32",
+    "dwmapi",
+    "gdi32",
+    "ntdll",
+    "ole32",
+    "setupapi",
+    "shlwapi",
+    "uuid",
+    "uxtheme",
+    "version",
+    "virtdisk",
+    "wininet",
+    "wintrust",
   ]
 }

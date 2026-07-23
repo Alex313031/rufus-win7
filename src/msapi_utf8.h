@@ -22,6 +22,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+#include <stddef.h>	// offsetof() -- MSVC's windows.h pulls this in transitively, MinGW's does not
 #include <windows.h>
 #include <stdio.h>
 #include <shlobj.h>

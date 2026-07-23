@@ -220,7 +220,10 @@
 #define PRAGMA_END_ALIGN(a)		__attribute__((aligned(a)))
 #endif
 
-#ifdef _MSC_VER
+/* clang is strict about the pointer type passed to _mm_loadu_si128() &co
+ * (const __m128i_u *), so it needs the same cast MSVC uses; only the GNU
+ * intrinsics accept a bare byte pointer. */
+#if defined(_MSC_VER) || defined(__clang__)
 #define _PTR(x)	(void*)((uintptr_t)x)
 #else
 #define _PTR(x)	x

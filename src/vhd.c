@@ -45,6 +45,13 @@
 #include "registry.h"
 #include "bled/bled.h"
 
+// MinGW gates VIRTUAL_STORAGE_TYPE_DEVICE_VHDX behind _WIN32_WINNT >= 0x0A00
+// (Win10) in virtdisk.h, but Rufus creates VHDX images on older targets too, so
+// provide the fallback when the SDK header left it out.
+#ifndef VIRTUAL_STORAGE_TYPE_DEVICE_VHDX
+#define VIRTUAL_STORAGE_TYPE_DEVICE_VHDX 3
+#endif
+
 extern char* save_image_type;
 extern BOOL ignore_boot_marker, has_ffu_support;
 extern RUFUS_DRIVE rufus_drive[MAX_DRIVES];

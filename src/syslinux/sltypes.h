@@ -1,5 +1,8 @@
-#ifndef _MSC_VER
-#error This header should only be used with Microsoft compilers
+/* clang-cl in MinGW (--target=...-gnu) mode does not define _MSC_VER but is
+ * MSVC-flag compatible; accept clang/GCC here too and error only for genuinely
+ * unknown compilers. */
+#if !defined(_MSC_VER) && !defined(__clang__) && !defined(__GNUC__)
+#error This header should only be used with Microsoft or compatible (clang/GCC) compilers
 #endif
 
 /* The addons below are not part of inttypes but required for syslinux */
