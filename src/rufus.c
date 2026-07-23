@@ -3873,9 +3873,9 @@ relaunch:
 		WriteSettingStr(SETTING_LOCALE, selected_locale->txt[0]);
 
 	if (!vc) {
-		if (MessageBoxExU(NULL, lmprintf(MSG_296), lmprintf(MSG_295),
-			MB_YESNO | MB_ICONWARNING | MB_IS_RTL | MB_SYSTEMMODAL, selected_langid) != IDYES)
-			goto out;
+		//if (MessageBoxExU(NULL, lmprintf(MSG_296), lmprintf(MSG_295),
+			//MB_YESNO | MB_ICONWARNING | MB_IS_RTL | MB_SYSTEMMODAL, selected_langid) != IDYES)
+			//goto out;
 		vc = TRUE;
 	}
 
