@@ -15,8 +15,23 @@ group("rufus_exe") {
 # Runtime and compile tests
 group("rufus_tests") {
   testonly = true
-  public_deps = [
-    ":rufus_libs",
+  public_deps = [ ":rufus_libs" ]
+}
+
+# rufus.rc embeds ../res/loc/embedded.loc (IDR_LC_RUFUS_LOC), a generated
+# strip of rufus.loc that upstream produces with build_embedded_loc.bat (MSVC)
+# or embedded.sed (autotools). Neither runs under GN, so without this action a
+# fresh checkout fails at the .rc compile. The script also writes the copy in
+# the source tree that rufus.rc's relative path resolves to; the declared
+# output below is what ninja tracks.
+action("embedded_loc") {
+  script = "../res/loc/build_embedded_loc.py"
+  inputs = [ "../res/loc/rufus.loc" ]
+  outputs = [ "$target_gen_dir/embedded.loc" ]
+  args = [
+    rebase_path("../res/loc/rufus.loc", root_build_dir),
+    rebase_path("../res/loc/embedded.loc", root_build_dir),
+    rebase_path("$target_gen_dir/embedded.loc", root_build_dir),
   ]
 }
 
@@ -36,36 +51,37 @@ executable("rufus") {
 
   sources = [
     #"../res/dbx/dbx_info.h",
-    "../res/grub2/grub2_version.h",
     "../res/grub/grub_version.h",
+    "../res/grub2/grub2_version.h",
     "badblocks.h",
     "bled/bled.h",
     "cregex.h",
     "darkmode.h",
+    "db.h",
+    "dev.h",
+    "dos.h",
     "drive.h",
     "efi.h",
     "format.h",
     "gpt_types.h",
     "hdd_vs_ufd.h",
-    "mbr_types.h",
-    "missing.h",
-    #"msvc-missing/unistd.h",
-    "ntdll.h",
-    "settings.h",
     "libcdio/cdio/cdio.h",
     "libcdio/cdio/iso9660.h",
     "libcdio/cdio/udf.h",
+    "license.h",
     "localization.h",
     "localization_data.h",
+    "mbr_types.h",
+    "missing.h",
     "msapi_utf8.h",
-    "dos.h",
+
+    #"msvc-missing/unistd.h",
+    "ntdll.h",
     "registry.h",
     "resource.h",
     "rufus.h",
-    "license.h",
-    "db.h",
+    "settings.h",
     "smart.h",
-    "dev.h",
     "ui.h",
     "ui_data.h",
     "vhd.h",
@@ -80,12 +96,14 @@ executable("rufus") {
     "cregex_parse.c",
     "cregex_vm.c",
     "darkmode.c",
+    "dev.c",
+    "dos.c",
     "dos_locale.c",
     "drive.c",
     "format.c",
-    "dos.c",
     "format_ext.c",
     "format_fat32.c",
+    "hash.c",
     "icon.c",
     "iso.c",
     "localization.c",
@@ -95,13 +113,11 @@ executable("rufus") {
     "process.c",
     "rufus.c",
     "rufus.rc",
-    "hash.c",
     "smart.c",
     "stdfn.c",
     "stdio.c",
     "stdlg.c",
     "syslinux.c",
-    "dev.c",
     "ui.c",
     "vhd.c",
     "wue.c",
@@ -109,41 +125,47 @@ executable("rufus") {
   ]
 
   deps = [
-    "libcdio:libcdio",
-    "syslinux:syslinux",
+    ":embedded_loc",
+    "libcdio",
+    "syslinux",
   ]
 
+  # Depend on the tracked copy of embedded.loc so that editing rufus.loc
+  # re-runs the action AND recompiles rufus.rc (the action alone only
+  # guarantees ordering, not recompilation).
+  inputs = [ "$target_gen_dir/embedded.loc" ]
+
   public_deps = [
-    "bled:bled",
-    "ext2fs:ext2fs",
-    "getopt:getopt",
+    "bled",
+    "ext2fs",
+    "getopt",
     "libcdio:libcdio-driver",
     "libcdio:libcdio-iso9960",
     "libcdio:libcdio-udf",
-    "ms-sys:ms-sys",
+    "ms-sys",
     "syslinux:syslinux-libfat",
     "syslinux:syslinux-libinstaller",
     "syslinux:syslinux-win",
-    "wimlib:wimlib",
+    "wimlib",
   ]
 }
 
 # Rufus supporting libraries as a standalone target
 group("rufus_libs") {
   public_deps = [
-    "bled:bled",
-    "ext2fs:ext2fs",
-    "getopt:getopt",
-    "libcdio:libcdio",
+    "bled",
+    "ext2fs",
+    "getopt",
+    "libcdio",
     "libcdio:libcdio-driver",
     "libcdio:libcdio-iso9960",
     "libcdio:libcdio-udf",
-    "ms-sys:ms-sys",
-    "syslinux:syslinux",
+    "ms-sys",
+    "syslinux",
     "syslinux:syslinux-libfat",
     "syslinux:syslinux-libinstaller",
     "syslinux:syslinux-win",
-    "wimlib:wimlib",
+    "wimlib",
   ]
 }
 
@@ -155,8 +177,9 @@ config("rufus_config") {
   cflags_c = []
   ldflags = []
   libs = []
+
   # Must explicitly set this for sources
-  configs += [ "//build/config/win:windowed_subsystem", ]
+  configs += [ "//build/config/win:windowed_subsystem" ]
 
   if (use_clang_cl) {
     cflags_c = [ "/clang:-std=c23" ]
@@ -171,6 +194,7 @@ config("rufus_config") {
     "libcdio/",
     "res/",
     "wimlib/",
+
     #"msvc-missing/",
     "ms-sys/inc/",
     "syslinux/libinstaller/",
@@ -188,14 +212,15 @@ config("rufus_config") {
     "-Wno-gnu-folding-constant",
     "-Wno-deprecated-non-prototype",
     "-Wno-dll-attribute-on-redeclaration",
-    "-Wno-pointer-sign",
   ]
 
+  # No -mssse3/-msha here: hash.c's accelerated SHA transforms carry
+  # __attribute__((target("ssse3,sse4.1,sha"))) (RUFUS_ENABLE_GCC_ARCH) and are
+  # gated by runtime CPUID checks, so they compile without target-wide flags.
+  # Enabling those ISAs globally would let the optimizer emit SSSE3/SHA
+  # instructions in unguarded code and crash older CPUs this fork targets.
   cflags += [
     "-msse2",
-    "-msse3",
-    "-mssse3",
-    "-msha",
     "-Wno-pointer-sign",
   ]
 
