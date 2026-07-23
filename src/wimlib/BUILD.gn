@@ -196,5 +196,10 @@ config("wimlib_config") {
     # int32/int64 wimlib_timespec, not raw time_t, so there is no ABI mismatch
     # with the rest of Rufus. No-op on x64 (already 64-bit).
     "_TIME_BITS=64",
+
+    # wimlibs requires Windows 7
+    "WINVER=0x0601",
+    "_WIN32_WINNT=0x0601",
+    "_WIN32_IE=0x0800",
   ]
 }

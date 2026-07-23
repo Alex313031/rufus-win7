@@ -224,6 +224,13 @@ config("rufus_config") {
     "-Wno-pointer-sign",
   ]
 
+  # Rufus requires Windows 7
+  defines += [
+    "WINVER=0x0601",
+    "_WIN32_WINNT=0x0601",
+    "_WIN32_IE=0x0800",
+  ]
+
   ldflags += [
     # /BREPRO (reproducible build) in the lld GNU/MinGW driver spelling. The
     # MSVC /DEPENDENTLOADFLAG:0x800 (LOAD_LIBRARY_SEARCH_SYSTEM32) has no lld
